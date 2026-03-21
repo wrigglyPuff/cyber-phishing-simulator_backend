@@ -1,3 +1,229 @@
+# **🎣GonePhishin' Backend**
+## **Project Description**
+This is the prototype of an AI-powered Cyber Phishing simulator and training portal. Built using a RESTful API, NestJS and JWT. Gone Phishin' backend will manage user authentications, simulation scenarios, training modules and performance tracking
+
+This backend will also enable trainers to see what learners have completed and their scores.
+
+## **🧩Features**
+<ul>
+  <li>RESTful API design</li>
+  <li>Rose based access control (learner vs trainer)</li>
+  <li>Secure password hashing</li>
+  <li>Training module delivery</li>
+  <li>Quiz and results tracking</li>
+  <li>Error handling and validation</li> 
+</ul>
+
+## **🧑‍💻Tech Stack**
+<ul>
+  <li><strong>Language:</strong>Typescript</li>
+  <li><strong>Framework:</strong>NestJS</li>
+  <li><strong>Database:</strong>MySQL</li>
+  <li><strong>ORM:</strong>Prisma</li>
+  <li><strong>Authentication:</strong>JWT + Passport.js</li>
+</ul>
+
+## **🧰Other Tools**
+<ul>
+  <li><strong>Project Management:</strong>Jira</li>
+  <li><strong>Design and Prototyping:</strong>Figma</li>
+</ul>
+
+## **Project Structure**
+🚧👷‍♀️🚧
+<ul>
+</ul>
+
+# **🔌API Endpoints**
+## **Authentication**
+<table>
+  <tr>
+    <th>Method</th>
+    <th>Endpoint</th>
+    <th>Description</th>
+    <th>Auth Required</th>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/auth/register</td>
+    <td>Register a new learner or trainer</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/auth/login</td>
+    <td>Login user and return JWT token</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/auth/me</td>
+    <td>Get current logged-in user</td>
+    <td>Yes</td>
+  </tr>
+</table>
+
+---
+
+## **🧑‍🤝‍🧑Users**
+<table>
+  <tr>
+    <th>Method</th>
+    <th>Endpoint</th>
+    <th>Description</th>
+    <th>Auth Required</th>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/users</td>
+    <td>Get all users (trainer view)</td>
+    <td>Yes (Trainer)</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/users/:id</td>
+    <td>Get user profile and results</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><strong>PATCH</strong></td>
+    <td>/users/:id</td>
+    <td>Update user details</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><strong>DELETE</strong></td>
+    <td>/users/:id</td>
+    <td>Delete user</td>
+    <td>Yes (Trainer)</td>
+  </tr>
+</table>
+
+---
+
+## **🎞️Scenarios**
+<table>
+  <tr>
+    <th>Method</th>
+    <th>Endpoint</th>
+    <th>Description</th>
+    <th>Auth Required</th>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/scenarios</td>
+    <td>Get assigned training scenarios</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/scenarios/:id</td>
+    <td>Get scenario details</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/scenarios</td>
+    <td>Create a new scenario</td>
+    <td>Yes (Trainer)</td>
+  </tr>
+  <tr>
+    <td><strong>PATCH</strong></td>
+    <td>/scenarios/:id</td>
+    <td>Update a scenario</td>
+    <td>Yes (Trainer)</td>
+  </tr>
+  <tr>
+    <td><strong>DELETE</strong></td>
+    <td>/scenarios/:id</td>
+    <td>Delete a scenario</td>
+    <td>Yes (Trainer)</td>
+  </tr>
+</table>
+
+---
+
+## **Attempts (Learner Actions)**
+<table>
+  <tr>
+    <th>Method</th>
+    <th>Endpoint</th>
+    <th>Description</th>
+    <th>Auth Required</th>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/attempts</td>
+    <td>Submit learner decision for a scenario</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/attempts/user/:id</td>
+    <td>Get all attempts for a user</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/attempts/:id</td>
+    <td>Get specific attempt details</td>
+    <td>Yes</td>
+  </tr>
+</table>
+
+---
+
+## **Feedback**
+<table>
+  <tr>
+    <th>Method</th>
+    <th>Endpoint</th>
+    <th>Description</th>
+    <th>Auth Required</th>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/feedback/:attemptId</td>
+    <td>Get feedback for a specific attempt</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/feedback</td>
+    <td>Create feedback (manual or AI-generated)</td>
+    <td>Yes</td>
+  </tr>
+</table>
+
+---
+
+## **Results / Progress Tracking**
+<table>
+  <tr>
+    <th>Method</th>
+    <th>Endpoint</th>
+    <th>Description</th>
+    <th>Auth Required</th>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/results/user/:id</td>
+    <td>Get summary of user performance</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/results</td>
+    <td>Get all results (trainer dashboard)</td>
+    <td>Yes (Trainer)</td>
+  </tr>
+</table>
+
+# **🔏Contributing**
+This project is a part of a university software development project. As of 2026, only group members may contribute and make improvements.
+
+
+## **Installation**
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
