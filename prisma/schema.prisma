@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  password String
+  role     String    @default("learner")
+  attempts Attempt[]
+  results  Results[]
+}
+
+model Module {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime   @default(now())
+  results     Results[]
+  scenarios   Scenario[]
+}
+
+model Scenario {
+  id        Int              @id @default(autoincrement())
+  moduleId  Int
+  title     String
+  content   String
+  createdAt DateTime         @default(now())
+  attempts  Attempt[]
+  module    Module           @relation(fields: [moduleId], references: [id])
+  choices   ScenarioChoice[]
+
+  @@index([moduleId], map: "Scenario_moduleId_fkey")
+}
+
+model ScenarioChoice {
+  id         Int       @id @default(autoincrement())
+  scenarioId Int
+  text       String
+  isCorrect  Boolean
+  attempts   Attempt[]
+  scenario   Scenario  @relation(fields: [scenarioId], references: [id])
+
+  @@index([scenarioId], map: "ScenarioChoice_scenarioId_fkey")
+}
+
+model Attempt {
+  id         Int            @id @default(autoincrement())
+  userId     Int
+  scenarioId Int
+  choiceId   Int
+  isCorrect  Boolean
+  createdAt  DateTime       @default(now())
+  choice     ScenarioChoice @relation(fields: [choiceId], references: [id])
+  scenario   Scenario       @relation(fields: [scenarioId], references: [id])
+  user       User           @relation(fields: [userId], references: [id])
+
+  @@index([choiceId], map: "Attempt_choiceId_fkey")
+  @@index([scenarioId], map: "Attempt_scenarioId_fkey")
+  @@index([userId], map: "Attempt_userId_fkey")
+}
+
+model Results {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  moduleId    Int
+  score       Int
+  completedAt DateTime @default(now())
+  module      Module   @relation(fields: [moduleId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([moduleId], map: "Results_moduleId_fkey")
+  @@index([userId], map: "Results_userId_fkey")
+}
