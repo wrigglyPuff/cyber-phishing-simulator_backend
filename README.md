@@ -282,7 +282,29 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+## Install Prisma
+<mark> NB: schema provided </mark>
 
+```bash
+#install dependencies
+npm install @prisma/client      //runtime library for Prisma
+npm install prisma --save-dev  //CLI for generating client, migrations, and database introspection
+```
+<mark>Create your own .env file in the root folder OR add the following: </mark><br>
+```bash
+DATABASE_URL="mysql://username:password@localhost:3306/db_name"
+```
+## Generate a prisma client
+```bash
+npx prisma generate
+```
+
+## Update local database
+```bash
+npx prisma migrate dev
+```
+
+🚧👷🚧 BELOW
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
