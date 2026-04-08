@@ -6,11 +6,18 @@ datasource db {
   provider = "mysql"
 }
 
+enum Role {
+  learner
+  trainer
+}
+//enum category model?
+//enum difficulty model?
 model User {
   id       Int       @id @default(autoincrement())
+  name     String
   email    String    @unique
   password String
-  role     String    @default("learner")
+  role     Role    @default(learner)
   attempts Attempt[]
   results  Results[]
 }
@@ -25,14 +32,19 @@ model Module {
 }
 
 model Scenario {
-  id        Int              @id @default(autoincrement())
-  moduleId  Int
-  title     String
-  content   String
-  createdAt DateTime         @default(now())
-  attempts  Attempt[]
-  module    Module           @relation(fields: [moduleId], references: [id])
-  choices   ScenarioChoice[]
+  id         Int              @id @default(autoincrement())
+  moduleId   Int
+  title       String
+  content     String          @db.Text
+  category    String //enum/?
+  difficulty  String //enum?
+  //isPhishing  Boolean
+  explanation String          @db.Text
+  cues        Json
+  createdAt   DateTime         @default(now())
+  attempts    Attempt[]
+  module      Module           @relation(fields: [moduleId], references: [id])
+  choices     ScenarioChoice[]
 
   @@index([moduleId], map: "Scenario_moduleId_fkey")
 }
