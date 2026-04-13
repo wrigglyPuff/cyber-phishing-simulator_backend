@@ -78,20 +78,20 @@ model AssignedModule {
 
 //Training scenarios within a module
 model Scenario {
-  id                Int              @id @default(autoincrement())
-  moduleId          Int
-  title             String
-  content           String          @db.Text
-  category          ScenarioCategory
-  difficulty        Difficulty
-  interactionType   InteractionType
-  explanation       String          @db.Text
-  createdAt         DateTime         @default(now())
+  id                  Int              @id @default(autoincrement())
+  moduleId            Int
+  title               String
+  content             String          @db.Text
+  category            ScenarioCategory
+  difficulty          Difficulty
+  interactionType     InteractionType   
+  scenarioDescription String          @db.Text
+  createdAt           DateTime         @default(now())
 
-  module            Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  choices           ScenarioChoice[]
-  scenarioCues      ScenarioCue[]
-  scenarioAttempts  ScenarioAttempt[]
+  module              Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  choices             ScenarioChoice[]
+  scenarioCues        ScenarioCue[]
+  scenarioAttempts    ScenarioAttempt[]
 
   @@index([moduleId])
 }
@@ -129,7 +129,7 @@ model ScenarioAttempt {
   id            Int             @id @default(autoincrement())
   attemptId     Int
   scenarioId    Int
-  choiceId      Int?
+  choiceId      Int?    
   isCorrect     Boolean
   createdAt     DateTime        @default(now())
 
