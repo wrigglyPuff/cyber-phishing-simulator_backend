@@ -6,182 +6,73 @@ datasource db {
   provider = "mysql"
 }
 
-//User roles in the system
-enum Role {
-  learner
-  trainer
-}
-
-//Categories of phishing scenarios
-enum ScenarioCategory {
-  email
-  smishing
-  invoice
-  delivery
-  internal_message
-  alert
-}
-
-//Difficulty levels for scenarios
-enum Difficulty {
-  easy
-  medium
-  hard
-}
-
-//Defines how a scenario is answered 
-//(binary = single choice vs cues = multiple selections)
-enum InteractionType {
-  binary
-  cues
-}
-
-//System users (learners and trainers)
 model User {
-  id                Int       @id @default(autoincrement())
-  name              String
-  email             String    @unique
-  passwordHash      String
-  role              Role    @default(learner)
-  attempts          Attempt[]
-  results           Result[]
-  assignedModules   AssignedModule[]
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  password String
+  role     String    @default("learner")
+  attempts Attempt[]
+  Results  Results[]
 }
 
-//Training modules containing scenarios
 model Module {
-  id                Int        @id @default(autoincrement())
-  title             String
-  description       String
-  createdAt         DateTime   @default(now())
-
-  results           Result[]
-  scenarios         Scenario[]
-  attempts          Attempt[]
-  assignedModules   AssignedModule[]
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime   @default(now())
+  Results     Results[]
+  scenarios   Scenario[]
 }
 
-//Links users to assigned modules
-model AssignedModule {
-  id          Int       @id @default(autoincrement())
+model Scenario {
+  id        Int              @id @default(autoincrement())
+  moduleId  Int
+  title     String
+  content   String
+  createdAt DateTime         @default(now())
+  Attempt   Attempt[]
+  module    Module           @relation(fields: [moduleId], references: [id])
+  choices   ScenarioChoice[]
+
+  @@index([moduleId], map: "Scenario_moduleId_fkey")
+}
+
+model ScenarioChoice {
+  id         Int       @id @default(autoincrement())
+  scenarioId Int
+  text       String
+  isCorrect  Boolean
+  Attempt    Attempt[]
+  scenario   Scenario  @relation(fields: [scenarioId], references: [id])
+
+  @@index([scenarioId], map: "ScenarioChoice_scenarioId_fkey")
+}
+
+model Attempt {
+  id             Int            @id @default(autoincrement())
+  userId         Int
+  scenarioId     Int
+  choiceId       Int
+  isCorrect      Boolean
+  createdAt      DateTime       @default(now())
+  ScenarioChoice ScenarioChoice @relation(fields: [choiceId], references: [id])
+  Scenario       Scenario       @relation(fields: [scenarioId], references: [id])
+  user           User           @relation(fields: [userId], references: [id])
+
+  @@index([choiceId], map: "Attempt_choiceId_fkey")
+  @@index([scenarioId], map: "Attempt_scenarioId_fkey")
+  @@index([userId], map: "Attempt_userId_fkey")
+}
+
+model Results {
+  id          Int      @id @default(autoincrement())
   userId      Int
   moduleId    Int
-  assignedAt  DateTime  @default(now())
+  score       Int
+  completedAt DateTime @default(now())
+  Module      Module   @relation(fields: [moduleId], references: [id])
+  User        User     @relation(fields: [userId], references: [id])
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  module      Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, moduleId])
-  @@index([userId])
-  @@index([moduleId])
-}
-
-//Training scenarios within a module
-model Scenario {
-  id                  Int              @id @default(autoincrement())
-  moduleId            Int
-  title               String
-  content             String          @db.Text
-  category            ScenarioCategory
-  difficulty          Difficulty
-  interactionType     InteractionType   
-  scenarioDescription String          @db.Text
-  createdAt           DateTime         @default(now())
-
-  module              Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  choices             ScenarioChoice[]
-  scenarioCues        ScenarioCue[]
-  scenarioAttempts    ScenarioAttempt[]
-
-  @@index([moduleId])
-}
-
-//Records binary selection for scenarios
-model ScenarioChoice {
-  id                Int       @id @default(autoincrement())
-  scenarioId        Int
-  text              String
-  isCorrect         Boolean
-  scenario          Scenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-  scenarioAttempts  ScenarioAttempt[]
-
-  @@unique([scenarioId, text])
-  @@index([scenarioId])
-}
-
-//Learner attempt per module
-model Attempt {
-  id                Int            @id @default(autoincrement())
-  userId            Int
-  moduleId          Int
-  createdAt         DateTime         @default(now())
-  
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  module            Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  scenarioAttempts  ScenarioAttempt[]
-
-  @@index([userId])
-  @@index([moduleId])
-}
-
-//Records response for each scenario in a module
-model ScenarioAttempt {
-  id            Int             @id @default(autoincrement())
-  attemptId     Int
-  scenarioId    Int
-  choiceId      Int?    
-  isCorrect     Boolean
-  createdAt     DateTime        @default(now())
-
-  attempt       Attempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  scenario      Scenario        @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-  choice        ScenarioChoice? @relation(fields: [choiceId], references: [id], onDelete: SetNull)
-  selectedCues  CueSelection[]
-
-  @@index([attemptId])
-  @@index([scenarioId])
-  @@index([choiceId])
-}
-
-//Scenarios with multiple cue selections
-model ScenarioCue {
-  id                  Int         @id @default(autoincrement())
-  scenarioId          Int
-  text                String
-  isCorrect           Boolean
-  scenario            Scenario    @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-  attemptSelections   CueSelection[]
-
-  @@unique([scenarioId, text])
-  @@index([scenarioId])
-}
-
-//Records multiple selections for scenarios with multiple cues
-model CueSelection {
-  id                  Int                   @id @default(autoincrement())
-  scenarioAttemptId   Int
-  cueId               Int
-
-  scenarioAttempt     ScenarioAttempt       @relation(fields: [scenarioAttemptId], references: [id], onDelete: Cascade) 
-  cue                 ScenarioCue           @relation(fields: [cueId], references: [id], onDelete: Cascade)
-
-  @@unique([scenarioAttemptId, cueId]) 
-  @@index([scenarioAttemptId])
-  @@index([cueId])
-
-}
-
-//Stores final results summary for each module attempted
-model Result {
-  id                  Int      @id @default(autoincrement())
-  userId              Int
-  moduleId            Int
-  score               Int
-  scenariosTotal      Int
-  completedAt         DateTime @default(now())
-  module              Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([moduleId])
-  @@index([userId])
+  @@index([moduleId], map: "Results_moduleId_fkey")
+  @@index([userId], map: "Results_userId_fkey")
 }
