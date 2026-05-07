@@ -1,10 +1,13 @@
 # **🎣GonePhishin' Backend**
+
 ## **Project Description**
+
 This is the prototype of an AI-powered Cyber Phishing simulator and training portal. Built using a RESTful API, NestJS and JWT. Gone Phishin' backend will manage user authentications, simulation scenarios, training modules and performance tracking
 
 This backend will also enable trainers to see what learners have completed and their scores.
 
 ## **🧩Features**
+
 <ul>
   <li>RESTful API design</li>
   <li>Rose based access control (learner vs trainer)</li>
@@ -15,6 +18,7 @@ This backend will also enable trainers to see what learners have completed and t
 </ul>
 
 ## **🧑‍💻Tech Stack**
+
 <ul>
   <li><strong>Language:</strong>Typescript</li>
   <li><strong>Framework:</strong>NestJS</li>
@@ -24,18 +28,23 @@ This backend will also enable trainers to see what learners have completed and t
 </ul>
 
 ## **🧰Other Tools**
+
 <ul>
   <li><strong>Project Management:</strong>Jira</li>
   <li><strong>Design and Prototyping:</strong>Figma</li>
 </ul>
 
 ## **Project Structure**
+
 🚧👷‍♀️🚧
+
 <ul>
 </ul>
 
 # **🔌API Endpoints**
+
 ## **Authentication**
+
 <table>
   <tr>
     <th>Method</th>
@@ -66,6 +75,7 @@ This backend will also enable trainers to see what learners have completed and t
 ---
 
 ## **🧑‍🤝‍🧑Users**
+
 <table>
   <tr>
     <th>Method</th>
@@ -102,6 +112,7 @@ This backend will also enable trainers to see what learners have completed and t
 ---
 
 ## **🎞️Scenarios**
+
 <table>
   <tr>
     <th>Method</th>
@@ -144,6 +155,7 @@ This backend will also enable trainers to see what learners have completed and t
 ---
 
 ## **Attempts (Learner Actions)**
+
 <table>
   <tr>
     <th>Method</th>
@@ -174,6 +186,7 @@ This backend will also enable trainers to see what learners have completed and t
 ---
 
 ## **Feedback**
+
 <table>
   <tr>
     <th>Method</th>
@@ -198,6 +211,7 @@ This backend will also enable trainers to see what learners have completed and t
 ---
 
 ## **Results / Progress Tracking**
+
 <table>
   <tr>
     <th>Method</th>
@@ -220,12 +234,13 @@ This backend will also enable trainers to see what learners have completed and t
 </table>
 
 # **🔏Contributing**
-This project is a part of a university software development project. As of 2026, only group members may contribute and make improvements.
 
+This project is a part of a university software development project. As of 2026, only group members may contribute and make improvements.
 
 ## **Installation**
 
 ## Description
+
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Project setup
@@ -247,6 +262,96 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+# Project Setup
+
+## Prerequisites
+
+Before running the application, ensure you have the following installed on your local machine:
+
+- Node.js
+- npm
+- MySQL
+
+---
+
+## MySQL Setup
+
+Create a local MySQL database for the application.
+
+You will need the following details:
+
+- Host
+- Port
+- Username
+- Password
+- Database Name
+
+---
+
+## Update Prisma Adapter Configuration
+
+#### `prisma.service.ts`
+
+Update the adapter configuration to match your local MySQL setup.
+
+Example values to update:
+
+```ts
+host: '127.0.0.1',
+port: 3306,
+user: 'yourUser',
+password: 'yourPassword',
+database: 'yourDatabase'
+```
+
+#### `test-prisma.ts`
+
+Update the same MySQL connection settings in this file as well:
+
+```ts
+host: '127.0.0.1',
+port: 3306,
+user: 'yourUser',
+password: 'yourPassword',
+database: 'yourDatabase'
+Environment Variables
+```
+
+Confirm your .env file in the project root contains the following values:
+
+```ts
+DATABASE_URL = 'mysql://user:password@127.0.0.1:3306/databaseName';
+JWT_SECRET = 'yourSecret';
+```
+
+### Install Dependencies
+
+Run the following command to install all required packages:
+
+```ts
+npm install
+```
+
+Generate Prisma Client
+
+```ts
+npx prisma generate
+```
+
+Pull Database Schema
+
+```ts
+npx prisma db pull
+```
+
+### Start the Application
+
+Run the NestJS application in development mode:
+
+```ts
+npm run start:dev
+```
+
 ## Run tests
 
 ```bash
@@ -259,7 +364,9 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+
 ## Install Prisma
+
 <mark> NB: schema provided </mark>
 
 ```bash
@@ -267,21 +374,27 @@ $ npm run test:cov
 npm install @prisma/client      //runtime library for Prisma
 npm install prisma --save-dev  //CLI for generating client, migrations, and database introspection
 ```
+
 <mark>Create your own .env file in the root folder OR add the following: </mark><br>
+
 ```bash
 DATABASE_URL="mysql://username:password@localhost:3306/db_name"
 ```
+
 ## Generate a prisma client
+
 ```bash
 npx prisma generate
 ```
 
 ## Update local database
+
 ```bash
 npx prisma migrate dev
 ```
 
 🚧👷🚧 BELOW
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
@@ -296,6 +409,7 @@ $ mau deploy
 With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
 ## Resources
+
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 Check out a few resources that may come in handy when working with NestJS:
 
