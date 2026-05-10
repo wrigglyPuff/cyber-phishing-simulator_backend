@@ -4,25 +4,26 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 @Injectable()
 export class PrismaService
-    extends PrismaClient
-    implements OnModuleInit, OnModuleDestroy {
-    constructor() {
-        const adapter = new PrismaMariaDb({
-            host: '127.0.0.1',
-            port: 3306,
-            user: 'root',
-            password: 'root123',
-            database: 'phishing_simulator',
-        });
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
+  constructor() {
+    const adapter = new PrismaMariaDb({
+      host: '127.0.0.1',
+      port: 3306,
+      user: 'root',
+      password: 'root1234',
+      database: 'uni',
+    });
 
-        super({ adapter });
-    }
+    super({ adapter });
+  }
 
-    async onModuleInit() {
-        await this.$connect();
-    }
+  async onModuleInit() {
+    await this.$connect();
+  }
 
-    async onModuleDestroy() {
-        await this.$disconnect();
-    }
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
 }

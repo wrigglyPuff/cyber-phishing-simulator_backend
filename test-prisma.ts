@@ -5,8 +5,8 @@ const adapter = new PrismaMariaDb({
   host: '127.0.0.1',
   port: 3306,
   user: 'root',
-  password: 'root123',
-  database: 'phishing_simulator',
+  password: 'root1234',
+  database: 'uni',
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -33,7 +33,7 @@ async function main() {
 
   console.log('Created scenario:', scenarioRecord);
 
-  const choiceRecord = await prisma.scenarioChoice.create({
+  const choiceRecord = await prisma.scenariochoice.create({
     data: {
       scenarioId: scenarioRecord.id,
       text: 'Report',
@@ -45,8 +45,9 @@ async function main() {
 
   const userRecord = await prisma.user.create({
     data: {
-      email: `dbtest_${Date.now()}@example.com`,
-      password: 'testpassword123',
+      username: `testuser`,
+      email: `testuser`,
+      passwordHash: 'testpassword123',
       role: 'learner',
     },
   });
@@ -78,7 +79,10 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error('Error: there is an issue, check prisma service, env file, mysql username and password are all correct', e);
+    console.error(
+      'Error: there is an issue, check prisma service, env file, mysql username and password are all correct',
+      e,
+    );
   })
   .finally(async () => {
     await prisma.$disconnect();
