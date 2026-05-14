@@ -17,7 +17,7 @@ export class UsersService {
     }
     async create(username: string, email: string, password: string) {
         if (!this.isValidPassword(password)) {
-            throw new BadRequestException('Password must be at least 6 charachters and include at least 1 number and 1 special charachter (!@#$%*?)');
+            throw new BadRequestException('Password must be at least 6 characters and include at least 1 number and 1 special charachter (!@#$%*?)');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         return await this.prisma.user.create({ data: { username: username, email: email, passwordHash: hashedPassword } });
