@@ -6,8 +6,8 @@ const adapter = new PrismaMariaDb({
   host: '127.0.0.1',
   port: 3306,
   user: 'root',
-  password: 'root123',
-  database: 'phishing_simulator',
+  password: 'root1234',
+  database: 'uni',
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -43,7 +43,6 @@ async function main() {
   });
 
   console.log('Created choice:', choiceRecord);
-
 
   //--Demo Users---
   const learnerPasswordHash = await bcrypt.hash('Password1!', 10);
@@ -114,7 +113,10 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error('Error: there is an issue, check prisma service, env file, mysql username and password are all correct', e);
+    console.error(
+      'Error: there is an issue, check prisma service, env file, mysql username and password are all correct',
+      e,
+    );
   })
   .finally(async () => {
     await prisma.$disconnect();
