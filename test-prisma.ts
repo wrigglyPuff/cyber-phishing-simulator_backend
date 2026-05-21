@@ -33,7 +33,7 @@ async function main() {
 
   console.log('Created scenario:', scenarioRecord);
 
-  const choiceRecord = await prisma.scenariochoice.create({
+  const choiceRecord = await prisma.scenarioChoice.create({
     data: {
       scenarioId: scenarioRecord.id,
       text: 'Report',
