@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import * as bcrypt from 'bcrypt';
 
 const adapter = new PrismaMariaDb({
   host: '127.0.0.1',
@@ -43,20 +44,53 @@ async function main() {
 
   console.log('Created choice:', choiceRecord);
 
-  const userRecord = await prisma.user.create({
-    data: {
-      username: `testuser`,
-      email: `testuser`,
-      passwordHash: 'testpassword123',
+  //--Demo Users---
+  const learnerPasswordHash = await bcrypt.hash('Password1!', 10);
+  const adminPasswordHash = await bcrypt.hash('Password1!', 10);
+
+  //Learner test user
+  const learnerUser = await prisma.user.upsert({
+    where: { email: 'testuser@example.com' },
+    update: {
+      username: 'testuser',
+      email: 'testuser@example.com',
+      passwordHash: learnerPasswordHash,
+      role: 'learner',
+    },
+    create: {
+      username: 'testuser',
+      email: 'testuser@example.com',
+      passwordHash: learnerPasswordHash,
       role: 'learner',
     },
   });
 
-  console.log('Created user:', userRecord);
+  console.log('Created learner user:', learnerUser);
+
+  //Admin test user
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@example.com' },
+    update: {
+      username: 'admin',
+      email: 'admin@example.com',
+      passwordHash: adminPasswordHash,
+      role: 'admin',
+    },
+    create: {
+      username: 'admin',
+      email: 'admin@example.com',
+      passwordHash: adminPasswordHash,
+      role: 'admin',
+    },
+  });
+
+  console.log('Created admin user:', adminUser);
+
+  console.log('Users for demon created successfully.');
 
   const attemptRecord = await prisma.attempt.create({
     data: {
-      userId: userRecord.id,
+      userId: learnerUser.id,
       scenarioId: scenarioRecord.id,
       choiceId: choiceRecord.id,
       isCorrect: true,
@@ -67,7 +101,7 @@ async function main() {
 
   const resultRecord = await prisma.results.create({
     data: {
-      userId: userRecord.id,
+      userId: learnerUser.id,
       moduleId: moduleRecord.id,
       score: 1,
     },

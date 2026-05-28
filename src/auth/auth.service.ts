@@ -23,9 +23,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid =
-      dto.password === user.passwordHash ||
-      (await bcrypt.compare(dto.password, user.passwordHash));
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -44,7 +45,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         username: user.username,
-        role: user.role === 'trainer' ? 'admin' : 'user',
+        role: user.role,
       },
     };
   }
