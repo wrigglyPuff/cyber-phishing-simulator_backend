@@ -4,9 +4,9 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 const adapter = new PrismaMariaDb({
   host: '127.0.0.1',
   port: 3306,
-  user: 'root',
-  password: 'root1234',
-  database: 'uni',
+  user: //'your sql user name',
+    password: //'yoursql password',
+  database: //'your database name',
 });
 
 const prisma = new PrismaClient({ adapter });

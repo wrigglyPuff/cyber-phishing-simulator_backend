@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-//import { DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,7 +16,7 @@ async function bootstrap() {
     origin: true, // or specific frontend URL
     credentials: true,
   });
-  /*
+  
     const config = new DocumentBuilder()
       .setTitle('Cyber Phishing Simulator Backend API')
       .setDescription('Backend API documentation for the Cyber Phishing Simulator')
@@ -25,7 +25,7 @@ async function bootstrap() {
     
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api-docs', app, document);
-    */
+    
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
