@@ -29,6 +29,10 @@ async function main() {
       moduleId: moduleRecord.id,
       title: 'Test Scenario',
       content: 'This is a test phishing scenario.',
+      category: 'Email',
+      difficulty: 'Easy',
+      interactionType: 'Multiple Choice',
+      scenarioDescription: 'Identify the phishing indicators in this email.',
     },
   });
 
@@ -91,9 +95,7 @@ async function main() {
   const attemptRecord = await prisma.attempt.create({
     data: {
       userId: learnerUser.id,
-      scenarioId: scenarioRecord.id,
-      choiceId: choiceRecord.id,
-      isCorrect: true,
+      moduleId: moduleRecord.id,
     },
   });
 
@@ -104,6 +106,7 @@ async function main() {
       userId: learnerUser.id,
       moduleId: moduleRecord.id,
       score: 1,
+      scenariosTotal: 1,
     },
   });
 
