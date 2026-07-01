@@ -5,7 +5,8 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 @Injectable()
 export class PrismaService
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy {
+  implements OnModuleInit, OnModuleDestroy
+{
   constructor() {
     const adapter = new PrismaMariaDb({
       host: '127.0.0.1',
