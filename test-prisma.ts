@@ -3,11 +3,11 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import * as bcrypt from 'bcrypt';
 
 const adapter = new PrismaMariaDb({
-  host: '127.0.0.1',
-  port: 3306,
-  user: //'your sql user name',
-    password: //'yoursql password',
-  database: //'your database name',
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
 });
 
 const prisma = new PrismaClient({ adapter });
