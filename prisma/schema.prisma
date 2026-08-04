@@ -44,11 +44,14 @@ model Scenario {
   id                  Int              @id @default(autoincrement())
   moduleId            Int
   title               String
-  content             String
+  content             String           @db.VarChar(250)
   category            String
   difficulty          String
   interactionType     String
-  scenarioDescription String
+  scenarioDescription String           @db.VarChar(250)
+  sender              String           @db.VarChar(250)
+  recipient           String           @db.VarChar(250)
+  subject             String           @db.VarChar(250)
   createdAt           DateTime         @default(now())
   module              Module           @relation(fields: [moduleId], references: [id])
   choices             ScenarioChoice[]
