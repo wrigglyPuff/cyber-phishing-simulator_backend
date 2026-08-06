@@ -44,11 +44,11 @@ model Scenario {
   id                  Int              @id @default(autoincrement())
   moduleId            Int
   title               String
-  content             String           @db.VarChar(250)
+  content             String           @db.VarChar(1000)
   category            String
   difficulty          String
   interactionType     String
-  scenarioDescription String           @db.VarChar(250)
+  scenarioDescription String           @db.VarChar(1000)
   sender              String           @db.VarChar(250)
   recipient           String           @db.VarChar(250)
   subject             String           @db.VarChar(250)
