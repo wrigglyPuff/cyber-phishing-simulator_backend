@@ -3,11 +3,11 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import * as bcrypt from 'bcrypt';
 
 const adapter = new PrismaMariaDb({
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -32,6 +32,9 @@ async function main() {
       category: 'Email',
       difficulty: 'Easy',
       interactionType: 'Multiple Choice',
+      sender: 'security@company.com',
+      recipient: 'employee@company.com',
+      subject: 'Important Account Update',
       scenarioDescription: 'Identify the phishing indicators in this email.',
     },
   });
