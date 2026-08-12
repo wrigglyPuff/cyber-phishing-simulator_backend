@@ -10,7 +10,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 @ApiTags('Training Modules')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard) //every route below requires a valid JWT
-@Controller('Training-Modules')
+@Controller('training-modules')
 export class TrainingModulesController {
     constructor(private readonly trainingModulesService: TrainingModulesService) { }
 
