@@ -39,15 +39,21 @@ export class ResultsService {
 
     //Learner's own summary, can filter to one module
     async getMyResults(userId: number, moduleId?: number) {
-        return this.prisma.results.findMany({
+        const results = await this.prisma.results.findMany({
             where: {
                 userId,
                 ...(moduleId ? { moduleId } : {})
             },
+            include: { Module: { select: { id: true, title: true } } },
             orderBy: {
                 completedAt: 'desc'
             }
         });
+        return results.map(r => ({
+            ...r,
+            scorePercent: r.scenariosTotal === 0
+                ? 0 : Math.round((r.score / r.scenariosTotal) * 100),
+        }));
     }
     //Trainer view of all learners' results, can filter to one module,
     //and simple aggregate stats (average score, total attempts, etc.)
