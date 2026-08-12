@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class ScenariosService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createScenarioDto: CreateScenarioDto) {
     return this.prisma.scenario.create({
@@ -20,6 +20,7 @@ export class ScenariosService {
         sender: createScenarioDto.sender,
         recipient: createScenarioDto.recipient,
         subject: createScenarioDto.subject,
+        correctActionExplanation: createScenarioDto.correctActionExplanation,
         choices: {
           create: createScenarioDto.choices,
         },

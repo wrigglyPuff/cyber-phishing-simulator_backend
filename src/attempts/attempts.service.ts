@@ -38,7 +38,16 @@ export class AttemptsService {
         if (!choice || choice.scenarioId !== dto.scenarioId) {
             throw new NotFoundException(`Your chosen selection does not belong to the correct scenario`);
         }
-        return this.prisma.scenarioAttempt.create({
+        /*  return this.prisma.scenarioAttempt.create({
+             data: {
+                 attemptId: attempt.id,
+                 scenarioId: dto.scenarioId,
+                 choiceId: dto.choiceId,
+                 isCorrect: choice.isCorrect,
+                 timeTakenSeconds: dto.timeTakenSeconds ?? 0,
+             },
+         }); */
+        const scenarioAttempt = await this.prisma.scenarioAttempt.create({
             data: {
                 attemptId: attempt.id,
                 scenarioId: dto.scenarioId,
@@ -47,6 +56,17 @@ export class AttemptsService {
                 timeTakenSeconds: dto.timeTakenSeconds ?? 0,
             },
         });
+        //Feedback enging: predefined feedback for correct/incorrect answers,
+        //also explains scenario's correct answer and why. Missed cues is TBC for now
+        //Team to decide if we have capacity/ability to implement this in the first release.
+        return {
+            ...scenarioAttempt,
+            feedback: {
+                message: choice.feedback,
+                correctActionExplained: choice.scenario.correctActionExplanation,
+                missedCues: [], // Placeholder for missed cues, to be implemented later
+            },
+        }
     }
 
     //Results Summary for one attempt and all answers submitted for each scenario

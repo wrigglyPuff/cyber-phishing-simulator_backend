@@ -7,10 +7,11 @@ import { ConfigModule } from '@nestjs/config';
 import { ScenariosModule } from './scenarios/scenarios.module';
 import { TrainingModulesModule } from './training-modules/training-modules.module';
 import { AttemptsModule } from './attempts/attempts.module';
+import { ResultsModule } from './results/results.module';
 
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), UsersModule, AuthModule, ScenariosModule, TrainingModulesModule, AttemptsModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), UsersModule, AuthModule, ScenariosModule, TrainingModulesModule, AttemptsModule, ResultsModule],
   controllers: [AppController],
   providers: [AppService],
 })

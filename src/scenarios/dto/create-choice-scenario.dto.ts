@@ -8,4 +8,8 @@ export class CreateChoiceScenarioDto {
     @IsBoolean()
     @IsNotEmpty()
     isCorrect!: boolean;
+
+    @IsString()
+    @IsNotEmpty()
+    feedback!: string;
 }
