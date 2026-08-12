@@ -1,11 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ScenariosService } from './scenarios.service';
 import { CreateScenarioDto } from './dto/create-scenario.dto';
 import { UpdateScenarioDto } from './dto/update-scenario.dto';
 
 @Controller('scenarios')
 export class ScenariosController {
-  constructor(private readonly scenariosService: ScenariosService) { }
+  constructor(private readonly scenariosService: ScenariosService) {}
 
   @Post()
   create(@Body() createScenarioDto: CreateScenarioDto) {
@@ -23,7 +31,10 @@ export class ScenariosController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateScenarioDto: UpdateScenarioDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateScenarioDto: UpdateScenarioDto,
+  ) {
     return this.scenariosService.update(+id, updateScenarioDto);
   }
 

@@ -4,53 +4,53 @@ import { CreateChoiceScenarioCueDto } from './create-scenario-cue.dto';
 import { Type } from 'class-transformer';
 
 export class CreateScenarioDto {
-    @IsString()
-    @IsNotEmpty()
-    title!: string;
+  @IsString()
+  @IsNotEmpty()
+  title!: string;
 
-    @IsInt()
-    @IsNotEmpty()
-    moduleId!: number;
+  @IsInt()
+  @IsNotEmpty()
+  moduleId!: number;
 
-    @IsString()
-    @IsNotEmpty()
-    content!: string;
+  @IsString()
+  @IsNotEmpty()
+  content!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    category!: string;
+  @IsString()
+  @IsNotEmpty()
+  category!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    difficulty!: string;
+  @IsString()
+  @IsNotEmpty()
+  difficulty!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    interactionType!: string;
+  @IsString()
+  @IsNotEmpty()
+  interactionType!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    scenarioDescription!: string;
+  @IsString()
+  @IsNotEmpty()
+  scenarioDescription!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    sender!: string;
+  @IsString()
+  @IsNotEmpty()
+  sender!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    recipient!: string;
+  @IsString()
+  @IsNotEmpty()
+  recipient!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    subject!: string;
+  @IsString()
+  @IsNotEmpty()
+  subject!: string;
 
-    @ArrayNotEmpty()
-    @ValidateNested({ each: true })
-    @Type(() => CreateChoiceScenarioDto)
-    choices!: CreateChoiceScenarioDto[];
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateChoiceScenarioDto)
+  choices!: CreateChoiceScenarioDto[];
 
-    @ArrayNotEmpty()
-    @ValidateNested({ each: true })
-    @Type(() => CreateChoiceScenarioCueDto)
-    cues!: CreateChoiceScenarioCueDto[];
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateChoiceScenarioCueDto)
+  cues!: CreateChoiceScenarioCueDto[];
 }
