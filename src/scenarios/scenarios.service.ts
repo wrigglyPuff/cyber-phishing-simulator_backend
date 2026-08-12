@@ -5,11 +5,20 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class ScenariosService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createScenarioDto: CreateScenarioDto) {
+    const { choices, ...scenarioData } = createScenarioDto;
     return this.prisma.scenario.create({
-      data: createScenarioDto,
+      data: {
+        ...scenarioData,
+        choices: {
+          create: choices,
+        },
+      },
+      include: {
+        choices: true,
+      },
     });
   }
 
@@ -24,9 +33,11 @@ export class ScenariosService {
   }
 
   async update(id: number, updateScenarioDto: UpdateScenarioDto) {
+    const { choices, ...scenarioData } = updateScenarioDto;
     return this.prisma.scenario.update({
       where: { id },
-      data: updateScenarioDto,
+      data:
+        scenarioData,
     });
   }
 

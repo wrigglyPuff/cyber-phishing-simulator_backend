@@ -41,22 +41,23 @@ model AssignedModule {
 }
 
 model Scenario {
-  id                  Int              @id @default(autoincrement())
-  moduleId            Int
-  title               String
-  content             String           @db.VarChar(1000)
-  category            String
-  difficulty          String
-  interactionType     String
-  scenarioDescription String           @db.VarChar(1000)
-  sender              String           @db.VarChar(250)
-  recipient           String           @db.VarChar(250)
-  subject             String           @db.VarChar(250)
-  createdAt           DateTime         @default(now())
-  module              Module           @relation(fields: [moduleId], references: [id])
-  choices             ScenarioChoice[]
-  cues                ScenarioCue[]
-  scenarioAttempts    ScenarioAttempt[]
+  id                        Int              @id @default(autoincrement())
+  moduleId                  Int
+  title                     String
+  content                   String           @db.VarChar(1000)
+  category                  String
+  difficulty                String
+  interactionType           String
+  scenarioDescription       String           @db.VarChar(1000)
+  sender                    String           @db.VarChar(250)
+  recipient                 String           @db.VarChar(250)
+  subject                   String           @db.VarChar(250)
+  correctActionExplanation  String           @db.VarChar(1000) @default("Explanations coming soon")
+  createdAt                 DateTime         @default(now())
+  module                    Module           @relation(fields: [moduleId], references: [id])
+  choices                   ScenarioChoice[]
+  cues                      ScenarioCue[]
+  scenarioAttempts          ScenarioAttempt[]
 
   @@index([moduleId], map: "Scenario_moduleId_fkey")
 }
@@ -66,6 +67,7 @@ model ScenarioChoice {
   scenarioId          Int
   text                String
   isCorrect           Boolean
+  feedback            String    @db.VarChar(1000) @default("No feedback available")
   scenario            Scenario  @relation(fields: [scenarioId], references: [id])
   scenarioAttempts    ScenarioAttempt[]
 
