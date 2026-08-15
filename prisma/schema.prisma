@@ -6,15 +6,24 @@ datasource db {
   provider = "mysql"
 }
 
+model Organisation {
+  id              Int     @id @default(autoincrement())
+  name            String  @unique
+  users           User[]
+}
 model User {
   id              Int              @id @default(autoincrement()) //confirm w/ AC, Int type or String?
   username        String           @unique
   email           String           @unique
   passwordHash    String
   role            String           @default("learner")
+  organisationId  Int
+  organisation    Organisation     @relation(fields: [organisationId], references:[id])
   assignedModules AssignedModule[]
   attempts        Attempt[]
   results         Results[]
+
+  @@index([organisationId], map: "User_organisationId_fkey")
 }
 
 model Module {

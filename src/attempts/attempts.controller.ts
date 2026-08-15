@@ -29,9 +29,9 @@ export class AttemptsController {
     }
 
     @Get(':id')
-    @ApiOperation({ summary: 'View one attempt and its results (own attempts, or any attempt if trainer)' })
+    @ApiOperation({ summary: 'View one attempt and its results (own attempts, or any attempt if trainer from the same organisation)' })
     findOne(@Request() req, @Param('id') id: string) {
         const isTrainer = req.user.role === 'trainer';
-        return this.attemptsService.findOne(+id, req.user.userId, isTrainer);
+        return this.attemptsService.findOne(+id, req.user.userId, isTrainer, req.user.organisation);
     }
 }

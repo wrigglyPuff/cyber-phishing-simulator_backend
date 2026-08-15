@@ -61,11 +61,12 @@ export class AttemptsService {
     }
 
     //Results Summary for one attempt and all answers submitted for each scenario
-    async findOne(attemptId: number, userId: number, isTrainer: boolean) {
+    async findOne(attemptId: number, userId: number, isTrainer: boolean, organisationId: number) {
         const attempt = await this.prisma.attempt.findUnique({
             where: { id: attemptId },
             include: {
-                scenarioAttempts: true
+                scenarioAttempts: true,
+                user: { select: { organisationId: true } },
             },
         });
         if (!attempt) {
@@ -73,6 +74,9 @@ export class AttemptsService {
         }
         if (!isTrainer && attempt.userId !== userId) {
             throw new ForbiddenException(`You do not have permission to view this attempt`);
+        }
+        if (isTrainer && attempt.user.organisationId !== organisationId) {
+            throw new ForbiddenException('You are not authorised, this ateempt belongs to another organisation')
         }
         return attempt;
     }
