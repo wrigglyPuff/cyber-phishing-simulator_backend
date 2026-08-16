@@ -8,28 +8,19 @@ export class ScenariosService {
   constructor(private prisma: PrismaService) {}
 
   async create(createScenarioDto: CreateScenarioDto) {
+    const { choices, ...scenarioData } = createScenarioDto;
     return this.prisma.scenario.create({
       data: {
-        title: createScenarioDto.title,
-        moduleId: createScenarioDto.moduleId,
-        content: createScenarioDto.content,
-        category: createScenarioDto.category,
-        difficulty: createScenarioDto.difficulty,
-        interactionType: createScenarioDto.interactionType,
-        scenarioDescription: createScenarioDto.scenarioDescription,
-        sender: createScenarioDto.sender,
-        recipient: createScenarioDto.recipient,
-        subject: createScenarioDto.subject,
+        ...scenarioData,
         choices: {
-          create: createScenarioDto.choices,
+          create: choices,
         },
         cues: {
           create: createScenarioDto.cues,
-        }
+        },
       },
       include: {
         choices: true,
-        cues: true,
       },
     });
   }
