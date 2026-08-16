@@ -1,5 +1,5 @@
 export class UserDto {
-  id!: number; //String or Int? TBC
+  id!: number;
   username!: string;
   email!: string;
   role!: string;

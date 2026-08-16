@@ -9,7 +9,28 @@ export class ScenariosService {
 
   async create(createScenarioDto: CreateScenarioDto) {
     return this.prisma.scenario.create({
-      data: createScenarioDto,
+      data: {
+        title: createScenarioDto.title,
+        moduleId: createScenarioDto.moduleId,
+        content: createScenarioDto.content,
+        category: createScenarioDto.category,
+        difficulty: createScenarioDto.difficulty,
+        interactionType: createScenarioDto.interactionType,
+        scenarioDescription: createScenarioDto.scenarioDescription,
+        sender: createScenarioDto.sender,
+        recipient: createScenarioDto.recipient,
+        subject: createScenarioDto.subject,
+        choices: {
+          create: createScenarioDto.choices,
+        },
+        cues: {
+          create: createScenarioDto.cues,
+        }
+      },
+      include: {
+        choices: true,
+        cues: true,
+      },
     });
   }
 
@@ -24,9 +45,10 @@ export class ScenariosService {
   }
 
   async update(id: number, updateScenarioDto: UpdateScenarioDto) {
+    const { choices, cues, ...scenarioData } = updateScenarioDto;
     return this.prisma.scenario.update({
       where: { id },
-      data: updateScenarioDto,
+      data: scenarioData,
     });
   }
 
