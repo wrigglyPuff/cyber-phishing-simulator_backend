@@ -43,4 +43,14 @@ export class CreateScenarioDto {
   @IsString()
   @IsNotEmpty()
   subject!: string;
+
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateChoiceScenarioDto)
+  choices!: CreateChoiceScenarioDto[];
+
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateChoiceScenarioCueDto)
+  cues!: CreateChoiceScenarioCueDto[];
 }
