@@ -28,17 +28,37 @@ export class ResultsController {
   @Post('attempts/:attemptId/finalize')
   @ApiOperation({ summary: 'Finalize an attempt and store the result' })
   finalize(@Request() req, @Param('attemptId') attemptId: string) {
-    return this.resultsService.finalizeAttempt(+attemptId, req.user.id);
+    return this.resultsService.finalizeAttempt(+attemptId, req.user.userId);
   }
 
   @Get('me')
   @ApiOperation({
-    summary: "Logged in learner's own results",
+    summary: "Logged in learner's own results, per module and per scenario",
   })
   @ApiQuery({ name: 'moduleId', required: false, type: Number })
   getMyResults(@Request() req, @Query('moduleId') moduleId?: string) {
-    return this.resultsService.getMyResults(
-      req.user.id,
+    return this.resultsService.getMySummary(
+      req.user.userId,
+      moduleId ? +moduleId : undefined,
+    );
+  }
+
+  @Get('module/:moduleId')
+  @UseGuards(RolesGuard)
+  @Roles('trainer')
+  @ApiOperation({
+    summary:
+      "Trainer's view of all learners' results for a specific module, by ID (same organisation only)",
+  })
+  @ApiQuery({ name: 'moduleId', required: false, type: Number })
+  getLearnerSummary(
+    @Request() req,
+    @Param('userId') userId: string,
+    @Query('moduleId') moduleId?: string,
+  ) {
+    return this.resultsService.getLearnerSummary(
+      +userId,
+      req.user.organisationId,
       moduleId ? +moduleId : undefined,
     );
   }
@@ -46,9 +66,13 @@ export class ResultsController {
   @UseGuards(RolesGuard)
   @Roles('trainer')
   @ApiOperation({
-    summary: "Trainer's view of all learners' results for a specific module",
+    summary:
+      "Trainer's view of all learner's results for a specific module (same organisation only)",
   })
-  getModuleResults(@Param('moduleId') moduleId: string) {
-    return this.resultsService.getModuleResults(+moduleId);
+  getModuleResults(@Request() req, @Param('moduleId') moduleId: string) {
+    return this.resultsService.getModuleResults(
+      +moduleId,
+      req.user.organisationId,
+    );
   }
 }

@@ -44,8 +44,9 @@ export class ResultsService {
     });
   }
 
-  //Learner's own summary, can filter to one module
-  async getMyResults(userId: number, moduleId?: number) {
+  //Learner's own summary, trainer can lookup specific learners
+  //can filter to one module and per scenario detail
+  private async buildSummary(userId: number, moduleId?: number) {
     const results = await this.prisma.results.findMany({
       where: {
         userId,
@@ -56,17 +57,62 @@ export class ResultsService {
         completedAt: 'desc',
       },
     });
-    return results.map((r) => ({
+
+    const moduleResults = results.map((r) => ({
       ...r,
       scorePercent:
         r.scenariosTotal === 0
           ? 0
           : Math.round((r.score / r.scenariosTotal) * 100),
     }));
+
+    const scenarioResults = await this.prisma.scenarioAttempt.findMany({
+      where: {
+        attempt: {
+          userId,
+          ...(moduleId ? { moduleId } : {}),
+        },
+      },
+      include: {
+        scenario: { select: { id: true, title: true, moduleId: true } },
+        choice: { select: { id: true, text: true, isCorrect: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { moduleResults, scenarioResults };
   }
-  //Trainer view of all learners' results, can filter to one module,
-  //and simple aggregate stats (average score, total attempts, etc.)
-  async getModuleResults(moduleId: number) {
+
+  //Learner own score + summary, each scenario per module,
+  //can filter to one module
+  async getMySummary(userId: number, moduleId?: number) {
+    return this.buildSummary(userId, moduleId);
+  }
+
+  //Look up learner by Id, check organisation
+  async getLearnerSummary(
+    learnerId: number,
+    requestingOrgId: number,
+    moduleId?: number,
+  ) {
+    const learner = await this.prisma.user.findUnique({
+      where: { id: learnerId },
+    });
+
+    if (!learner) {
+      throw new NotFoundException('Learner not found');
+    }
+
+    if (learner.organisationId !== requestingOrgId) {
+      throw new ForbiddenException('That learner is not in your organisation');
+    }
+    return this.buildSummary(learnerId, moduleId);
+  }
+
+  //Trainer view of all learner's results for a module.
+  //Restricted to own organisation only,
+  //siple aggregare stats (total attempts, average score etc)
+  async getModuleResults(moduleId: number, organisationId: number) {
     const module = await this.prisma.module.findUnique({
       where: { id: moduleId },
     });
@@ -76,7 +122,10 @@ export class ResultsService {
     }
 
     const results = await this.prisma.results.findMany({
-      where: { moduleId },
+      where: {
+        moduleId,
+        User: { organisationId },
+      },
       include: { User: { select: { id: true, username: true, email: true } } },
       orderBy: { completedAt: 'desc' },
     });
