@@ -50,7 +50,7 @@ model AssignedModule {
 }
 
 model Scenario {
-  id                        Int               @id @default(autoincrement())
+  id                        Int              @id @default(autoincrement())
   moduleId                  Int
   title                     String
   content                   String           @db.VarChar(1000)
@@ -61,7 +61,7 @@ model Scenario {
   sender                    String           @db.VarChar(250)
   recipient                 String           @db.VarChar(250)
   subject                   String           @db.VarChar(250)
-  correctActionExplanation  String           @db.VarChar(1000)
+  correctActionExplanation  String           @db.VarChar(1000) @default("Explanations coming soon")
   createdAt                 DateTime         @default(now())
   module                    Module           @relation(fields: [moduleId], references: [id])
   choices                   ScenarioChoice[]
@@ -72,13 +72,13 @@ model Scenario {
 }
 
 model ScenarioChoice {
-  id               Int               @id @default(autoincrement())
-  scenarioId       Int
-  text             String
-  isCorrect        Boolean
-  feedback         String           @db.VarChar(1000) 
-  scenario         Scenario          @relation(fields: [scenarioId], references: [id])
-  scenarioAttempts ScenarioAttempt[]
+  id                  Int       @id @default(autoincrement())
+  scenarioId          Int
+  text                String
+  isCorrect           Boolean
+  feedback            String    @db.VarChar(1000) @default("No feedback available")
+  scenario            Scenario  @relation(fields: [scenarioId], references: [id])
+  scenarioAttempts    ScenarioAttempt[]
 
   @@index([scenarioId], map: "ScenarioChoice_scenarioId_fkey")
 }
