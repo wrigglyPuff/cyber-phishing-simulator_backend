@@ -9,10 +9,17 @@ import { TrainingModulesModule } from './training-modules/training-modules.modul
 import { AttemptsModule } from './attempts/attempts.module';
 import { ResultsModule } from './results/results.module';
 
-
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), UsersModule, AuthModule, ScenariosModule, TrainingModulesModule, AttemptsModule, ResultsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    UsersModule,
+    AuthModule,
+    ScenariosModule,
+    TrainingModulesModule,
+    AttemptsModule,
+    ResultsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
