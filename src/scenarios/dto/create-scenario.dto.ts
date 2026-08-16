@@ -1,4 +1,10 @@
-import { IsString, IsInt, IsNotEmpty, ArrayNotEmpty, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  IsNotEmpty,
+  ArrayNotEmpty,
+  ValidateNested,
+} from 'class-validator';
 import { CreateChoiceScenarioDto } from './create-choice-scenario.dto';
 import { CreateChoiceScenarioCueDto } from './create-scenario-cue.dto';
 import { Type } from 'class-transformer';
