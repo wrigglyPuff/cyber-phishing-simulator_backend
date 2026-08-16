@@ -21,6 +21,7 @@ export class ScenariosService {
       },
       include: {
         choices: true,
+        cues: true,
       },
     });
   }
