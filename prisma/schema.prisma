@@ -7,34 +7,34 @@ datasource db {
 }
 
 model User {
-  id              Int       @id @default(autoincrement()) //confirm w/ AC, Int type or String?
-  username        String    @unique
-  email           String    @unique
+  id              Int              @id @default(autoincrement()) //confirm w/ AC, Int type or String?
+  username        String           @unique
+  email           String           @unique
   passwordHash    String
-  role            String    @default("learner")
+  role            String           @default("learner")
   assignedModules AssignedModule[]
-  attempts      Attempt[]
-  results       Results[]
-}
-
-model Module {
-  id              Int        @id @default(autoincrement())
-  title           String
-  description     String
-  createdAt       DateTime   @default(now())
-  assignedUsers   AssignedModule[]
-  scenarios       Scenario[]
   attempts        Attempt[]
   results         Results[]
 }
 
+model Module {
+  id            Int              @id @default(autoincrement())
+  title         String
+  description   String
+  createdAt     DateTime         @default(now())
+  assignedUsers AssignedModule[]
+  scenarios     Scenario[]
+  attempts      Attempt[]
+  results       Results[]
+}
+
 model AssignedModule {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  moduleId      Int
-  assignedAt    DateTime @default(now())
-  user          User     @relation(fields: [userId], references: [id])
-  module        Module   @relation(fields: [moduleId], references: [id])
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  moduleId   Int
+  assignedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+  module     Module   @relation(fields: [moduleId], references: [id])
 
   @@index([userId], map: "AssignedModule_userId_fkey")
   @@index([moduleId], map: "AssignedModule_moduleId_fkey")
@@ -75,67 +75,80 @@ model ScenarioChoice {
 }
 
 model ScenarioCue {
-  id                Int       @id @default(autoincrement())
-  scenarioId        Int
-  text              String
-  isCorrect         Boolean
-  scenario          Scenario  @relation(fields: [scenarioId], references: [id])
-  cueSelections     CueSelection[]
+  id            Int            @id @default(autoincrement())
+  scenarioId    Int
+  text          String
+  isCorrect     Boolean
+  scenario      Scenario       @relation(fields: [scenarioId], references: [id])
+  cueSelections CueSelection[]
+  missedCues    MissedCue[]
 
   @@index([scenarioId], map: "ScenarioCue_scenarioId_fkey")
 }
 
 model Attempt {
-  id                Int            @id @default(autoincrement())
-  userId            Int
-  moduleId          Int
-  createdAt         DateTime       @default(now())
-  user              User           @relation(fields: [userId], references: [id])
-  module            Module         @relation(fields: [moduleId], references: [id])
-  scenarioAttempts  ScenarioAttempt[]
+  id               Int               @id @default(autoincrement())
+  userId           Int
+  moduleId         Int
+  createdAt        DateTime          @default(now())
+  user             User              @relation(fields: [userId], references: [id])
+  module           Module            @relation(fields: [moduleId], references: [id])
+  scenarioAttempts ScenarioAttempt[]
 
   @@index([userId], map: "Attempt_userId_fkey")
   @@index([moduleId], map: "Attempt_moduleId_fkey")
 }
 
 model ScenarioAttempt {
-  id              Int       @id @default(autoincrement())
-  attemptId       Int
-  scenarioId      Int
-  choiceId        Int?
-  isCorrect       Boolean
-  createdAt       DateTime  @default(now())
-  attempt         Attempt   @relation(fields: [attemptId], references: [id])
-  scenario        Scenario  @relation(fields: [scenarioId], references: [id])
-  choice          ScenarioChoice? @relation(fields: [choiceId], references: [id])
-  cueSelections   CueSelection[]
+  id               Int             @id @default(autoincrement())
+  attemptId        Int
+  scenarioId       Int
+  choiceId         Int?
+  isCorrect        Boolean
+  timeTakenSeconds Int
+  createdAt        DateTime        @default(now())
+  attempt          Attempt         @relation(fields: [attemptId], references: [id])
+  scenario         Scenario        @relation(fields: [scenarioId], references: [id])
+  choice           ScenarioChoice? @relation(fields: [choiceId], references: [id])
+  cueSelections    CueSelection[]
+  missedCues       MissedCue[]
 
   @@index([attemptId], map: "ScenarioAttempt_attemptId_fkey")
   @@index([scenarioId], map: "ScenarioAttempt_scenarioId_fkey")
   @@index([choiceId], map: "ScenarioAttempt_choiceId_fkey")
-  
 }
 
 model CueSelection {
-  id                  Int           @id @default(autoincrement())
-  scenarioAttemptId   Int
-  cueId               Int
-  scenarioAttempt     ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
-  cue                 ScenarioCue   @relation(fields: [cueId], references: [id])
+  id                Int             @id @default(autoincrement())
+  scenarioAttemptId Int
+  cueId             Int
+  scenarioAttempt   ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
+  cue               ScenarioCue     @relation(fields: [cueId], references: [id])
 
   @@index([scenarioAttemptId], map: "CueSelection_scenarioAttemptId_fkey")
   @@index([cueId], map: "CueSelection_cueId_fkey")
 }
 
+model MissedCue {
+  id                Int             @id @default(autoincrement())
+  scenarioAttemptId Int
+  cueId             Int
+  scenarioAttempt   ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
+  cue               ScenarioCue     @relation(fields: [cueId], references: [id])
+
+  @@index([scenarioAttemptId], map: "MissedCue_scenarioAttemptId_fkey")
+  @@index([cueId], map: "MissedCue_cueId_fkey")
+}
+
 model Results {
-  id              Int      @id @default(autoincrement())
-  userId          Int
-  moduleId        Int
-  score           Int
-  scenariosTotal  Int
-  completedAt     DateTime @default(now())
-  Module          Module   @relation(fields: [moduleId], references: [id])
-  User            User     @relation(fields: [userId], references: [id])
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  moduleId       Int
+  score          Int
+  scenariosTotal Int
+  completedAt    DateTime @default(now())
+  Module         Module   @relation(fields: [moduleId], references: [id])
+  User           User     @relation(fields: [userId], references: [id])
 
   @@index([moduleId], map: "Results_moduleId_fkey")
   @@index([userId], map: "Results_userId_fkey")

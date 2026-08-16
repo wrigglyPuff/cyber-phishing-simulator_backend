@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class ScenariosService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(createScenarioDto: CreateScenarioDto) {
     const { choices, ...scenarioData } = createScenarioDto;
@@ -14,6 +14,9 @@ export class ScenariosService {
         ...scenarioData,
         choices: {
           create: choices,
+        },
+        cues: {
+          create: createScenarioDto.cues,
         },
       },
       include: {
@@ -33,11 +36,10 @@ export class ScenariosService {
   }
 
   async update(id: number, updateScenarioDto: UpdateScenarioDto) {
-    const { choices, ...scenarioData } = updateScenarioDto;
+    const { choices, cues, ...scenarioData } = updateScenarioDto;
     return this.prisma.scenario.update({
       where: { id },
-      data:
-        scenarioData,
+      data: scenarioData,
     });
   }
 

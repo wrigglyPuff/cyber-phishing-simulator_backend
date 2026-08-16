@@ -20,6 +20,7 @@ async function bootstrap() {
     .setTitle('Cyber Phishing Simulator Backend API')
     .setDescription('Backend API documentation for the Cyber Phishing Simulator')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

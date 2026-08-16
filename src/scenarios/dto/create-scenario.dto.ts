@@ -1,6 +1,4 @@
-import { IsString, IsInt, IsNotEmpty, ArrayNotEmpty, ValidateNested } from 'class-validator';
-import { CreateChoiceScenarioDto } from './create-choice-scenario.dto';
-import { Type } from 'class-transformer';
+import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateScenarioDto {
   @IsString()
@@ -51,4 +49,9 @@ export class CreateScenarioDto {
   @ArrayNotEmpty()
   @Type(() => CreateChoiceScenarioDto)
   choices!: CreateChoiceScenarioDto[];
+
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateChoiceScenarioCueDto)
+  cues!: CreateChoiceScenarioCueDto[];
 }
