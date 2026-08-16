@@ -47,15 +47,6 @@ export class AttemptsService {
         `Your chosen selection does not belong to the correct scenario`,
       );
     }
-    /*  return this.prisma.scenarioAttempt.create({
-             data: {
-                 attemptId: attempt.id,
-                 scenarioId: dto.scenarioId,
-                 choiceId: dto.choiceId,
-                 isCorrect: choice.isCorrect,
-                 timeTakenSeconds: dto.timeTakenSeconds ?? 0,
-             },
-         }); */
     const scenarioAttempt = await this.prisma.scenarioAttempt.create({
       data: {
         attemptId: attempt.id,

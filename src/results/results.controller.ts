@@ -1,4 +1,54 @@
-import { Controller } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ResultsService } from './results.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles.decorators';
 
+@ApiTags('results')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('results')
-export class ResultsController {}
+export class ResultsController {
+  constructor(private readonly resultsService: ResultsService) {}
+
+  @Post('attempts/:attemptId/finalize')
+  @ApiOperation({ summary: 'Finalize an attempt and store the result' })
+  finalize(@Request() req, @Param('attemptId') attemptId: string) {
+    return this.resultsService.finalizeAttempt(+attemptId, req.user.id);
+  }
+
+  @Get('me')
+  @ApiOperation({
+    summary: "Logged in learner's own results",
+  })
+  @ApiQuery({ name: 'moduleId', required: false, type: Number })
+  getMyResults(@Request() req, @Query('moduleId') moduleId?: string) {
+    return this.resultsService.getMyResults(
+      req.user.id,
+      moduleId ? +moduleId : undefined,
+    );
+  }
+  @Get('module/:moduleId')
+  @UseGuards(RolesGuard)
+  @Roles('trainer')
+  @ApiOperation({
+    summary: "Trainer's view of all learners' results for a specific module",
+  })
+  getModuleResults(@Param('moduleId') moduleId: string) {
+    return this.resultsService.getModuleResults(+moduleId);
+  }
+}
