@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { TrainingModulesService } from './training-modules.service';
 import { CreateTrainingModuleDto } from './dto/create-training-module.dto';
 import { UpdateTrainingModuleDto } from './dto/update-training-module.dto';
@@ -18,20 +18,21 @@ export class TrainingModulesController {
     @UseGuards(RolesGuard) //only trainers can create modules
     @Roles('trainer')
     @ApiOperation({ summary: 'Create a new training module (trainer only)' })
-    create(@Body() createTrainingModuleDto: CreateTrainingModuleDto) {
-        return this.trainingModulesService.create(createTrainingModuleDto);
+    create(@Body() createTrainingModuleDto: CreateTrainingModuleDto, @Req() req: any) {
+        return this.trainingModulesService.create(createTrainingModuleDto, req.user.organisationId);
     }
 
     @Get()
     @ApiOperation({ summary: 'List all training modules)' })
-    findAll() {
-        return this.trainingModulesService.findAll();
+    findAll(@Req() req: any) {
+        return this.trainingModulesService.findAll(req.user.organisationId);
     }
 
     @Get(':id')
     @ApiOperation({ summary: 'Get a single module, including its scenarios)' })
-    findOne(@Param('id') id: string) {
-        return this.trainingModulesService.findOne(+id);
+    findOne(@Param('id') id: string, @Req() req: any) {
+        return this.trainingModulesService.findOne(+id, req.user.organisationId);
+        //protection validator
     }
 
     @Patch(':id')

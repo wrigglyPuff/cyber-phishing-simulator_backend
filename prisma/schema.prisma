@@ -7,10 +7,12 @@ datasource db {
 }
 
 model Organisation {
-  id              Int     @id @default(autoincrement())
-  name            String  @unique
-  users           User[]
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  users   User[]
+  modules Module[]
 }
+
 model User {
   id              Int              @id @default(autoincrement()) //confirm w/ AC, Int type or String?
   username        String           @unique
@@ -18,7 +20,7 @@ model User {
   passwordHash    String
   role            String           @default("learner")
   organisationId  Int
-  organisation    Organisation     @relation(fields: [organisationId], references:[id])
+  organisation    Organisation     @relation(fields: [organisationId], references: [id])
   assignedModules AssignedModule[]
   attempts        Attempt[]
   results         Results[]
@@ -27,14 +29,18 @@ model User {
 }
 
 model Module {
-  id            Int              @id @default(autoincrement())
-  title         String
-  description   String
-  createdAt     DateTime         @default(now())
-  assignedUsers AssignedModule[]
-  scenarios     Scenario[]
-  attempts      Attempt[]
-  results       Results[]
+  id             Int              @id @default(autoincrement())
+  organisationId Int
+  organisation   Organisation     @relation(fields: [organisationId], references: [id])
+  title          String
+  description    String
+  createdAt      DateTime         @default(now())
+  assignedUsers  AssignedModule[]
+  scenarios      Scenario[]
+  attempts       Attempt[]
+  results        Results[]
+
+  @@index([organisationId], map: "Module_organisationId_fkey")
 }
 
 model AssignedModule {
@@ -50,35 +56,35 @@ model AssignedModule {
 }
 
 model Scenario {
-  id                        Int              @id @default(autoincrement())
-  moduleId                  Int
-  title                     String
-  content                   String           @db.VarChar(1000)
-  category                  String
-  difficulty                String
-  interactionType           String
-  scenarioDescription       String           @db.VarChar(1000)
-  sender                    String           @db.VarChar(250)
-  recipient                 String           @db.VarChar(250)
-  subject                   String           @db.VarChar(250)
-  correctActionExplanation  String           @db.VarChar(1000) @default("Explanations coming soon")
-  createdAt                 DateTime         @default(now())
-  module                    Module           @relation(fields: [moduleId], references: [id])
-  choices                   ScenarioChoice[]
-  cues                      ScenarioCue[]
-  scenarioAttempts          ScenarioAttempt[]
+  id                       Int               @id @default(autoincrement())
+  moduleId                 Int
+  title                    String
+  content                  String            @db.VarChar(1000)
+  category                 String
+  difficulty               String
+  interactionType          String
+  scenarioDescription      String            @db.VarChar(1000)
+  sender                   String            @db.VarChar(250)
+  recipient                String            @db.VarChar(250)
+  subject                  String            @db.VarChar(250)
+  correctActionExplanation String            @default("Explanations coming soon") @db.VarChar(1000)
+  createdAt                DateTime          @default(now())
+  module                   Module            @relation(fields: [moduleId], references: [id])
+  choices                  ScenarioChoice[]
+  cues                     ScenarioCue[]
+  scenarioAttempts         ScenarioAttempt[]
 
   @@index([moduleId], map: "Scenario_moduleId_fkey")
 }
 
 model ScenarioChoice {
-  id                  Int       @id @default(autoincrement())
-  scenarioId          Int
-  text                String
-  isCorrect           Boolean
-  feedback            String    @db.VarChar(1000) @default("No feedback available")
-  scenario            Scenario  @relation(fields: [scenarioId], references: [id])
-  scenarioAttempts    ScenarioAttempt[]
+  id               Int               @id @default(autoincrement())
+  scenarioId       Int
+  text             String
+  isCorrect        Boolean
+  feedback         String            @default("No feedback available") @db.VarChar(1000)
+  scenario         Scenario          @relation(fields: [scenarioId], references: [id])
+  scenarioAttempts ScenarioAttempt[]
 
   @@index([scenarioId], map: "ScenarioChoice_scenarioId_fkey")
 }

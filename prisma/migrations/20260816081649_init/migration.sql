@@ -57,7 +57,7 @@ CREATE TABLE `Scenario` (
     `sender` VARCHAR(250) NOT NULL,
     `recipient` VARCHAR(250) NOT NULL,
     `subject` VARCHAR(250) NOT NULL,
-    `correctActionExplanation` VARCHAR(1000) NOT NULL,
+    `correctActionExplanation` VARCHAR(1000) NOT NULL DEFAULT 'Explanations coming soon',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `Scenario_moduleId_fkey`(`moduleId`),
@@ -70,7 +70,7 @@ CREATE TABLE `ScenarioChoice` (
     `scenarioId` INTEGER NOT NULL,
     `text` VARCHAR(191) NOT NULL,
     `isCorrect` BOOLEAN NOT NULL,
-    `feedback` VARCHAR(1000) NOT NULL,
+    `feedback` VARCHAR(1000) NOT NULL DEFAULT 'No feedback available',
 
     INDEX `ScenarioChoice_scenarioId_fkey`(`scenarioId`),
     PRIMARY KEY (`id`)

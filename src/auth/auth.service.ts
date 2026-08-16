@@ -39,6 +39,7 @@ export class AuthService {
       email: user.email,
       username: user.username,
       role: user.role,
+      organisationId: user.organisationId,
     });
 
     return {
@@ -49,6 +50,7 @@ export class AuthService {
         email: user.email,
         username: user.username,
         role: user.role,
+        organisationId: user.organisationId,
       },
     };
   }
@@ -57,7 +59,8 @@ export class AuthService {
     const user = await this.usersService.create(
       dto.username,
       dto.email,
-      dto.password
+      dto.password,
+      dto.organisationId,
     );
 
     const token = this.jwtService.sign({
@@ -65,6 +68,7 @@ export class AuthService {
       email: user.email,
       username: user.username,
       role: user.role,
+      organisationId: user.organisationId,
     });
 
     return {
@@ -75,6 +79,7 @@ export class AuthService {
         email: user.email,
         username: user.username,
         role: user.role,
+        organisationId: user.organisationId,
       },
     };
   }

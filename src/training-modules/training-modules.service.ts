@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateTrainingModuleDto } from './dto/create-training-module.dto';
 import { UpdateTrainingModuleDto } from './dto/update-training-module.dto';
@@ -8,21 +8,25 @@ export class TrainingModulesService {
     constructor(private prisma: PrismaService) { }
 
     //Trainers create a new module
-    async create(createTrainingModuleDto: CreateTrainingModuleDto) {
+    async create(createTrainingModuleDto: CreateTrainingModuleDto, organisationId: number) {
         return this.prisma.module.create({
-            data: createTrainingModuleDto,
+            data: {
+                ...createTrainingModuleDto,
+                organisationId,
+            },
         });
     }
 
     //All roles (both trainer and learners) need to list modules
-    async findAll() {
+    async findAll(organisationId: number) {
         return this.prisma.module.findMany({
+            where: { organisationId },
             orderBy: { createdAt: 'desc' },
         });
     }
 
     //Single module with included scenarios for frontend to render
-    async findOne(id: number) {
+    async findOne(id: number, organisationId: number) {
         const module = await this.prisma.module.findUnique({
             where: { id },
             include: { scenarios: true },
