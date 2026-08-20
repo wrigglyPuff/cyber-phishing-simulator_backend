@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ScenariosService } from './scenarios.service';
 import { CreateScenarioDto } from './dto/create-scenario.dto';
 import { UpdateScenarioDto } from './dto/update-scenario.dto';
@@ -7,13 +23,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles, ROLES_KEY } from '../auth/roles.decorators';
 
-
 @ApiTags('scenarios')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard) //every route below requires a valid JWT
 @Controller('scenarios')
 export class ScenariosController {
-  constructor(private readonly scenariosService: ScenariosService) { }
+  constructor(private readonly scenariosService: ScenariosService) {}
 
   @Post()
   @UseGuards(RolesGuard)
@@ -24,9 +39,14 @@ export class ScenariosController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all scenarios' })
-  findAll() {
-    return this.scenariosService.findAll();
+  @ApiOperation({
+    summary: 'List all scenarios, optionally filtered by module',
+  })
+  @ApiQuery({ name: 'moduleId', required: false, type: Number })
+  findAll(
+    @Query('moduleId', new ParseIntPipe({ optional: true })) moduleId?: number,
+  ) {
+    return this.scenariosService.findAll(moduleId);
   }
 
   @Get(':id')
@@ -39,7 +59,10 @@ export class ScenariosController {
   @UseGuards(RolesGuard)
   @Roles('trainer') //only trainers can update scenarios
   @ApiOperation({ summary: 'Update a scenario (trainer only)' })
-  update(@Param('id') id: string, @Body() updateScenarioDto: UpdateScenarioDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateScenarioDto: UpdateScenarioDto,
+  ) {
     return this.scenariosService.update(+id, updateScenarioDto);
   }
 
