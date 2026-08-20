@@ -26,8 +26,10 @@ export class ScenariosService {
     });
   }
 
-  async findAll() {
-    return this.prisma.scenario.findMany();
+  async findAll(moduleId?: number) {
+    return this.prisma.scenario.findMany({
+      where: moduleId !== undefined ? { moduleId } : undefined,
+    });
   }
 
   async findOne(id: number) {
