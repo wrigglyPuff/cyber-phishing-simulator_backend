@@ -34,6 +34,9 @@ export class TrainingModulesService {
         if (!module) {
             throw new NotFoundException(`Module ${id} not found`);
         }
+        if (module.organisationId !== organisationId) {
+            throw new ForbiddenException('You do not have permission to access this module')
+        }
         return module;
     }
 

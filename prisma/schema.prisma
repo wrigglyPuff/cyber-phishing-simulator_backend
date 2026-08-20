@@ -9,36 +9,36 @@ datasource db {
 model Organisation {
   id      Int      @id @default(autoincrement())
   name    String   @unique
-  users   User[]
   modules Module[]
+  users   User[]
 }
 
 model User {
-  id              Int              @id @default(autoincrement()) //confirm w/ AC, Int type or String?
+  id              Int              @id @default(autoincrement())
   username        String           @unique
   email           String           @unique
   passwordHash    String
   role            String           @default("learner")
   organisationId  Int
-  organisation    Organisation     @relation(fields: [organisationId], references: [id])
   assignedModules AssignedModule[]
   attempts        Attempt[]
   results         Results[]
+  organisation    Organisation     @relation(fields: [organisationId], references: [id])
 
   @@index([organisationId], map: "User_organisationId_fkey")
 }
 
 model Module {
   id             Int              @id @default(autoincrement())
-  organisationId Int
-  organisation   Organisation     @relation(fields: [organisationId], references: [id])
   title          String
   description    String
   createdAt      DateTime         @default(now())
+  organisationId Int
   assignedUsers  AssignedModule[]
-  scenarios      Scenario[]
   attempts       Attempt[]
+  organisation   Organisation     @relation(fields: [organisationId], references: [id])
   results        Results[]
+  scenarios      Scenario[]
 
   @@index([organisationId], map: "Module_organisationId_fkey")
 }
@@ -48,8 +48,8 @@ model AssignedModule {
   userId     Int
   moduleId   Int
   assignedAt DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id])
   module     Module   @relation(fields: [moduleId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "AssignedModule_userId_fkey")
   @@index([moduleId], map: "AssignedModule_moduleId_fkey")
@@ -70,9 +70,9 @@ model Scenario {
   correctActionExplanation String            @default("Explanations coming soon") @db.VarChar(1000)
   createdAt                DateTime          @default(now())
   module                   Module            @relation(fields: [moduleId], references: [id])
+  scenarioAttempts         ScenarioAttempt[]
   choices                  ScenarioChoice[]
   cues                     ScenarioCue[]
-  scenarioAttempts         ScenarioAttempt[]
 
   @@index([moduleId], map: "Scenario_moduleId_fkey")
 }
@@ -83,8 +83,8 @@ model ScenarioChoice {
   text             String
   isCorrect        Boolean
   feedback         String            @default("No feedback available") @db.VarChar(1000)
-  scenario         Scenario          @relation(fields: [scenarioId], references: [id])
   scenarioAttempts ScenarioAttempt[]
+  scenario         Scenario          @relation(fields: [scenarioId], references: [id])
 
   @@index([scenarioId], map: "ScenarioChoice_scenarioId_fkey")
 }
@@ -94,9 +94,9 @@ model ScenarioCue {
   scenarioId    Int
   text          String
   isCorrect     Boolean
-  scenario      Scenario       @relation(fields: [scenarioId], references: [id])
   cueSelections CueSelection[]
   missedCues    MissedCue[]
+  scenario      Scenario       @relation(fields: [scenarioId], references: [id])
 
   @@index([scenarioId], map: "ScenarioCue_scenarioId_fkey")
 }
@@ -106,8 +106,8 @@ model Attempt {
   userId           Int
   moduleId         Int
   createdAt        DateTime          @default(now())
-  user             User              @relation(fields: [userId], references: [id])
   module           Module            @relation(fields: [moduleId], references: [id])
+  user             User              @relation(fields: [userId], references: [id])
   scenarioAttempts ScenarioAttempt[]
 
   @@index([userId], map: "Attempt_userId_fkey")
@@ -122,11 +122,11 @@ model ScenarioAttempt {
   isCorrect        Boolean
   timeTakenSeconds Int
   createdAt        DateTime        @default(now())
-  attempt          Attempt         @relation(fields: [attemptId], references: [id])
-  scenario         Scenario        @relation(fields: [scenarioId], references: [id])
-  choice           ScenarioChoice? @relation(fields: [choiceId], references: [id])
   cueSelections    CueSelection[]
   missedCues       MissedCue[]
+  attempt          Attempt         @relation(fields: [attemptId], references: [id])
+  choice           ScenarioChoice? @relation(fields: [choiceId], references: [id])
+  scenario         Scenario        @relation(fields: [scenarioId], references: [id])
 
   @@index([attemptId], map: "ScenarioAttempt_attemptId_fkey")
   @@index([scenarioId], map: "ScenarioAttempt_scenarioId_fkey")
@@ -137,8 +137,8 @@ model CueSelection {
   id                Int             @id @default(autoincrement())
   scenarioAttemptId Int
   cueId             Int
-  scenarioAttempt   ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
   cue               ScenarioCue     @relation(fields: [cueId], references: [id])
+  scenarioAttempt   ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
 
   @@index([scenarioAttemptId], map: "CueSelection_scenarioAttemptId_fkey")
   @@index([cueId], map: "CueSelection_cueId_fkey")
@@ -148,8 +148,8 @@ model MissedCue {
   id                Int             @id @default(autoincrement())
   scenarioAttemptId Int
   cueId             Int
-  scenarioAttempt   ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
   cue               ScenarioCue     @relation(fields: [cueId], references: [id])
+  scenarioAttempt   ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
 
   @@index([scenarioAttemptId], map: "MissedCue_scenarioAttemptId_fkey")
   @@index([cueId], map: "MissedCue_cueId_fkey")
