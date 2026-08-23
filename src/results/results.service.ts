@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { Status } from '@prisma/client';
 
 @Injectable()
 export class ResultsService {
@@ -12,7 +13,7 @@ export class ResultsService {
 
   //Completed module, results row stored
   async finalizeAttempt(attemptId: number, userId: number) {
-    const attempt = await this.prisma.attempt.findUnique({
+    const attempt = await this.prisma.moduleResults.findUnique({
       where: { id: attemptId },
       include: { scenarioAttempts: true },
     });
@@ -31,15 +32,23 @@ export class ResultsService {
       );
     }
 
-    const score = attempt.scenarioAttempts.filter((sa) => sa.isCorrect).length;
+    const totalScore = attempt.scenarioAttempts.filter(
+      (sa) => sa.isCorrect,
+    ).length;
     const scenariosTotal = attempt.scenarioAttempts.length;
+    const percentageScore = Math.round((totalScore / scenariosTotal) * 100);
 
-    return this.prisma.results.create({
+    return this.prisma.moduleResults.update({
+      where: { id: attemptId },
       data: {
-        userId: attempt.userId,
-        moduleId: attempt.moduleId,
-        score,
-        scenariosTotal,
+        total_score: totalScore,
+        max_possible_score: scenariosTotal,
+        percentage_score: percentageScore,
+        scenarios_completed: scenariosTotal,
+        total_scenarios: scenariosTotal,
+        passed: percentageScore >= 80,
+        status: Status.COMPLETED,
+        completedAt: new Date(),
       },
     });
   }
@@ -47,35 +56,26 @@ export class ResultsService {
   //Learner's own summary, trainer can lookup specific learners
   //can filter to one module and per scenario detail
   private async buildSummary(userId: number, moduleId?: number) {
-    const results = await this.prisma.results.findMany({
+    const moduleResults = await this.prisma.moduleResults.findMany({
       where: {
         userId,
         ...(moduleId ? { moduleId } : {}),
       },
-      include: { Module: { select: { id: true, title: true } } },
+      include: { module: { select: { id: true, title: true } } },
       orderBy: {
-        completedAt: 'desc',
+        createdAt: 'desc',
       },
     });
 
-    const moduleResults = results.map((r) => ({
-      ...r,
-      scorePercent:
-        r.scenariosTotal === 0
-          ? 0
-          : Math.round((r.score / r.scenariosTotal) * 100),
-    }));
-
     const scenarioResults = await this.prisma.scenarioAttempt.findMany({
       where: {
-        attempt: {
+        moduleResult: {
           userId,
           ...(moduleId ? { moduleId } : {}),
         },
       },
       include: {
         scenario: { select: { id: true, title: true, moduleId: true } },
-        choice: { select: { id: true, text: true, isCorrect: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -121,13 +121,13 @@ export class ResultsService {
       throw new NotFoundException('Module not found');
     }
 
-    const results = await this.prisma.results.findMany({
+    const results = await this.prisma.moduleResults.findMany({
       where: {
         moduleId,
-        User: { organisationId },
+        organisationId,
       },
-      include: { User: { select: { id: true, username: true, email: true } } },
-      orderBy: { completedAt: 'desc' },
+      include: { user: { select: { id: true, username: true, email: true } } },
+      orderBy: { createdAt: 'desc' },
     });
 
     const completions = results.length;
@@ -135,10 +135,10 @@ export class ResultsService {
       completions === 0
         ? 0
         : Math.round(
-            (results.reduce((sum, r) => sum + r.score / r.scenariosTotal, 0) /
-              completions) *
-              100,
+            results.reduce((sum, r) => sum + r.percentage_score, 0) /
+              completions,
           );
+
     return {
       moduleId,
       completions,

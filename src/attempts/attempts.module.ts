@@ -4,8 +4,8 @@ import { AttemptsController } from './attempts.controller';
 import { PrismaModule } from '../prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [AttemptsController],
-    providers: [AttemptsService],
+  imports: [PrismaModule],
+  controllers: [AttemptsController],
+  providers: [AttemptsService],
 })
-export class AttemptsModule { }
+export class AttemptsModule {}

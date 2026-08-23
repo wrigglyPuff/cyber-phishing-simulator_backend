@@ -4,9 +4,8 @@ import { TrainingModulesController } from './training-modules.controller';
 import { PrismaModule } from '../prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [TrainingModulesController],
-    providers: [TrainingModulesService],
+  imports: [PrismaModule],
+  controllers: [TrainingModulesController],
+  providers: [TrainingModulesService],
 })
-
-export class TrainingModulesModule { }
+export class TrainingModulesModule {}

@@ -2,12 +2,15 @@ import {
   IsString,
   IsInt,
   IsNotEmpty,
+  IsEnum,
   ArrayNotEmpty,
   ValidateNested,
 } from 'class-validator';
 import { CreateChoiceScenarioDto } from './create-choice-scenario.dto';
 import { CreateChoiceScenarioCueDto } from './create-scenario-cue.dto';
 import { Type } from 'class-transformer';
+import { ScenarioCategory, ScenarioDifficulty } from '@prisma/client';
+import { IsFictionalEmail } from './validators/is-fictional-email.validator';
 
 export class CreateScenarioDto {
   @IsString()
@@ -22,13 +25,13 @@ export class CreateScenarioDto {
   @IsNotEmpty()
   content!: string;
 
-  @IsString()
+  @IsEnum(ScenarioCategory)
   @IsNotEmpty()
-  category!: string;
+  category!: ScenarioCategory;
 
-  @IsString()
+  @IsEnum(ScenarioDifficulty)
   @IsNotEmpty()
-  difficulty!: string;
+  difficulty!: ScenarioDifficulty;
 
   @IsString()
   @IsNotEmpty()
@@ -40,10 +43,12 @@ export class CreateScenarioDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsFictionalEmail()
   sender!: string;
 
   @IsString()
   @IsNotEmpty()
+  @IsFictionalEmail()
   recipient!: string;
 
   @IsString()
@@ -52,15 +57,15 @@ export class CreateScenarioDto {
 
   @IsString()
   @IsNotEmpty()
-  correctActionExplanation!: string;
+  correctActionExplanation?: string;
 
   @ValidateNested({ each: true })
   @Type(() => CreateChoiceScenarioDto)
   @ArrayNotEmpty()
-  choices!: CreateChoiceScenarioDto[];
+  choices?: CreateChoiceScenarioDto[];
 
   @ValidateNested({ each: true })
   @Type(() => CreateChoiceScenarioCueDto)
   @ArrayNotEmpty()
-  cues!: CreateChoiceScenarioCueDto[];
+  cues?: CreateChoiceScenarioCueDto[];
 }

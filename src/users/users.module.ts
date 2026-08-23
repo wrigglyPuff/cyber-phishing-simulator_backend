@@ -9,4 +9,4 @@ import { PrismaModule } from '../prisma.module';
   controllers: [UsersController],
   exports: [UsersService], // Export the service to be used in other modules
 })
-export class UsersModule { }
+export class UsersModule {}

@@ -6,6 +6,53 @@ datasource db {
   provider = "mysql"
 }
 
+enum Role {
+  GLOBAL_ADMIN
+  TRAINER
+  LEARNER
+}
+enum ScenarioCategory {
+  PHISHING
+  SMISHING
+  VISHING
+  SOCIAL_ENGINEERING
+  MALWARE
+  RANSONWARE
+  BUISINESS_EMAIL_COMPROMISE
+  SPEAR_PHISHING
+  WHALING
+}
+
+enum ScenarioDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ScenarionInteractionType {
+  EMAIL
+  TEXT_MESSAGE
+  PHONE_CALL
+  SOCIAL_MEDIA
+}
+
+enum Status {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum CueTag {
+  URGENCY
+  MISMATCHED_DOMAIN
+  UNEXPECTED_ATTACHMENT
+  SUSPICIOUS_LINK
+  AUTHORITY_IMPERSONATION
+  SPELLING_GRAMMAR
+  GENERIC_GREETING
+  OTHER
+}
+
 model Organisation {
   id      Int      @id @default(autoincrement())
   name    String   @unique
@@ -16,43 +63,31 @@ model Organisation {
 model User {
   id              Int              @id @default(autoincrement())
   username        String           @unique
+  firstName       String
+  lastName        String
   email           String           @unique
   passwordHash    String
-  role            String           @default("learner")
-  organisationId  Int
-  assignedModules AssignedModule[]
-  attempts        Attempt[]
-  results         Results[]
-  organisation    Organisation     @relation(fields: [organisationId], references: [id])
+  role            Role             @default(LEARNER)
+  organisationId  Int?
+  moduleResults   ModuleResults[]
+  organisation    Organisation?     @relation(fields: [organisationId], references: [id])
 
   @@index([organisationId], map: "User_organisationId_fkey")
 }
 
 model Module {
-  id             Int              @id @default(autoincrement())
-  title          String
-  description    String
-  createdAt      DateTime         @default(now())
-  organisationId Int
-  assignedUsers  AssignedModule[]
-  attempts       Attempt[]
-  organisation   Organisation     @relation(fields: [organisationId], references: [id])
-  results        Results[]
-  scenarios      Scenario[]
+  id              Int              @id @default(autoincrement())
+  title           String
+  description     String
+  createdAt       DateTime         @default(now())
+  organisationId  Int
+  assignedUsers   Json?           //array list of userId's
+  organisation    Organisation     @relation(fields: [organisationId], references: [id])
+  scenarios       Scenario[]
+  scenarioAttempts ScenarioAttempt[]
+  moduleResults   ModuleResults[]
 
   @@index([organisationId], map: "Module_organisationId_fkey")
-}
-
-model AssignedModule {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  moduleId   Int
-  assignedAt DateTime @default(now())
-  module     Module   @relation(fields: [moduleId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "AssignedModule_userId_fkey")
-  @@index([moduleId], map: "AssignedModule_moduleId_fkey")
 }
 
 model Scenario {
@@ -60,111 +95,66 @@ model Scenario {
   moduleId                 Int
   title                    String
   content                  String            @db.VarChar(1000)
-  category                 String
-  difficulty               String
+  category                 ScenarioCategory
+  difficulty               ScenarioDifficulty
   interactionType          String
   scenarioDescription      String            @db.VarChar(1000)
   sender                   String            @db.VarChar(250)
   recipient                String            @db.VarChar(250)
   subject                  String            @db.VarChar(250)
-  correctActionExplanation String            @default("Explanations coming soon") @db.VarChar(1000)
+  correctActionExplanation String?           @default("Explanations coming soon") @db.VarChar(1000)
   createdAt                DateTime          @default(now())
   module                   Module            @relation(fields: [moduleId], references: [id])
   scenarioAttempts         ScenarioAttempt[]
-  choices                  ScenarioChoice[]
-  cues                     ScenarioCue[]
+  choices                  Json
+  cues                     Json
 
   @@index([moduleId], map: "Scenario_moduleId_fkey")
 }
 
-model ScenarioChoice {
-  id               Int               @id @default(autoincrement())
-  scenarioId       Int
-  text             String
-  isCorrect        Boolean
-  feedback         String            @default("No feedback available") @db.VarChar(1000)
-  scenarioAttempts ScenarioAttempt[]
-  scenario         Scenario          @relation(fields: [scenarioId], references: [id])
-
-  @@index([scenarioId], map: "ScenarioChoice_scenarioId_fkey")
-}
-
-model ScenarioCue {
-  id            Int            @id @default(autoincrement())
-  scenarioId    Int
-  text          String
-  isCorrect     Boolean
-  cueSelections CueSelection[]
-  missedCues    MissedCue[]
-  scenario      Scenario       @relation(fields: [scenarioId], references: [id])
-
-  @@index([scenarioId], map: "ScenarioCue_scenarioId_fkey")
-}
-
-model Attempt {
-  id               Int               @id @default(autoincrement())
-  userId           Int
-  moduleId         Int
-  createdAt        DateTime          @default(now())
-  module           Module            @relation(fields: [moduleId], references: [id])
-  user             User              @relation(fields: [userId], references: [id])
-  scenarioAttempts ScenarioAttempt[]
-
-  @@index([userId], map: "Attempt_userId_fkey")
-  @@index([moduleId], map: "Attempt_moduleId_fkey")
-}
-
 model ScenarioAttempt {
-  id               Int             @id @default(autoincrement())
-  attemptId        Int
-  scenarioId       Int
-  choiceId         Int?
-  isCorrect        Boolean
-  timeTakenSeconds Int
-  createdAt        DateTime        @default(now())
-  cueSelections    CueSelection[]
-  missedCues       MissedCue[]
-  attempt          Attempt         @relation(fields: [attemptId], references: [id])
-  choice           ScenarioChoice? @relation(fields: [choiceId], references: [id])
+  id                  Int             @id @default(autoincrement())
+  moduleResultId      Int
+  scenarioId          Int
+  moduleId            Int
+  isCorrect           Boolean
+  timeTakenSeconds    Int
+  selectedChoice      Int?
+  selectedChoiceText  String?
+  createdAt           DateTime        @default(now())
+  cueSelections       Json?
+  missedCues          Json?
+  module              Module          @relation(fields:[moduleId], references:[id])
+  moduleResult        ModuleResults   @relation(fields: [moduleResultId], references: [id])
   scenario         Scenario        @relation(fields: [scenarioId], references: [id])
+  //add score according to detailed flagged selections, match cueSelections and missedCues to determine score, must be 80% or more
 
-  @@index([attemptId], map: "ScenarioAttempt_attemptId_fkey")
+  @@index([moduleResultId], map: "ScenarioAttempt_moduleResultId_fkey")
   @@index([scenarioId], map: "ScenarioAttempt_scenarioId_fkey")
-  @@index([choiceId], map: "ScenarioAttempt_choiceId_fkey")
+  @@index([moduleId], map: "ScenarioAttempt_moduleId_fkey")
 }
 
-model CueSelection {
-  id                Int             @id @default(autoincrement())
-  scenarioAttemptId Int
-  cueId             Int
-  cue               ScenarioCue     @relation(fields: [cueId], references: [id])
-  scenarioAttempt   ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
+model ModuleResults {
+  id                    Int               @id @default(autoincrement())
+  userId                Int
+  moduleId              Int
+  organisationId        Int
+  status                Status
+  total_score           Int
+  max_possible_score    Int
+  percentage_score      Int
+  scenarios_completed   Int
+  total_scenarios       Int
+  passed                Boolean //has the user scored =>80% for the module
+  feedback              String            @db.VarChar(1000)
+  createdAt             DateTime          @default(now())
+  startedAt             DateTime?
+  completedAt           DateTime?         
+  updatedAt             DateTime          @updatedAt
+  module                Module              @relation(fields: [moduleId], references: [id])
+  user                  User                @relation(fields: [userId], references: [id])
+  scenarioAttempts      ScenarioAttempt[]
 
-  @@index([scenarioAttemptId], map: "CueSelection_scenarioAttemptId_fkey")
-  @@index([cueId], map: "CueSelection_cueId_fkey")
-}
-
-model MissedCue {
-  id                Int             @id @default(autoincrement())
-  scenarioAttemptId Int
-  cueId             Int
-  cue               ScenarioCue     @relation(fields: [cueId], references: [id])
-  scenarioAttempt   ScenarioAttempt @relation(fields: [scenarioAttemptId], references: [id])
-
-  @@index([scenarioAttemptId], map: "MissedCue_scenarioAttemptId_fkey")
-  @@index([cueId], map: "MissedCue_cueId_fkey")
-}
-
-model Results {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  moduleId       Int
-  score          Int
-  scenariosTotal Int
-  completedAt    DateTime @default(now())
-  Module         Module   @relation(fields: [moduleId], references: [id])
-  User           User     @relation(fields: [userId], references: [id])
-
-  @@index([moduleId], map: "Results_moduleId_fkey")
-  @@index([userId], map: "Results_userId_fkey")
+  @@index([userId], map: "ModuleResults_userId_fkey")
+  @@index([moduleId], map: "ModuleResults_moduleId_fkey")
 }

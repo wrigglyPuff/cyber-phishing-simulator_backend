@@ -22,6 +22,7 @@ import { UpdateScenarioDto } from './dto/update-scenario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles, ROLES_KEY } from '../auth/roles.decorators';
+import { Role } from '@prisma/client';
 
 @ApiTags('scenarios')
 @ApiBearerAuth()
@@ -32,7 +33,7 @@ export class ScenariosController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('trainer') //only trainers can create scenarios
+  @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can create scenarios
   @ApiOperation({ summary: 'Create a new scenario (trainer only)' })
   create(@Body() createScenarioDto: CreateScenarioDto) {
     return this.scenariosService.create(createScenarioDto);
@@ -57,7 +58,7 @@ export class ScenariosController {
 
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles('trainer') //only trainers can update scenarios
+  @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can update scenarios
   @ApiOperation({ summary: 'Update a scenario (trainer only)' })
   update(
     @Param('id') id: string,
@@ -68,7 +69,7 @@ export class ScenariosController {
 
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles('trainer') //only trainers can delete scenarios
+  @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can delete scenarios
   @ApiOperation({ summary: 'Delete a scenario (trainer only)' })
   remove(@Param('id') id: string) {
     return this.scenariosService.remove(+id);

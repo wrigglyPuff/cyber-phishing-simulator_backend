@@ -7,6 +7,9 @@ import {
 import { PrismaService } from '../prisma.service';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { CreateScenarioAttemptDto } from './dto/create-scenario-attempt.dto';
+import { Status, Prisma } from '@prisma/client';
+import { CreateChoiceScenarioDto } from '../scenarios/dto/create-choice-scenario.dto';
+import { CreateChoiceScenarioCueDto } from '../scenarios/dto/create-scenario-cue.dto';
 
 @Injectable()
 export class AttemptsService {
@@ -21,10 +24,20 @@ export class AttemptsService {
       throw new NotFoundException(`Module with ID ${dto.moduleId} not found`);
     }
 
-    return this.prisma.attempt.create({
+    return this.prisma.moduleResults.create({
       data: {
         userId,
         moduleId: dto.moduleId,
+        organisationId: module.organisationId,
+        status: Status.IN_PROGRESS,
+        total_score: 0,
+        max_possible_score: 0,
+        percentage_score: 0,
+        scenarios_completed: 0,
+        total_scenarios: 0,
+        passed: false,
+        feedback: '',
+        startedAt: new Date(),
       },
     });
   }
@@ -35,36 +48,59 @@ export class AttemptsService {
     attemptId: number,
     dto: CreateScenarioAttemptDto,
   ) {
-    const attempt = await this.ensureOwnedByUser(attemptId, userId);
+    const moduleResults = await this.ensureOwnedByUser(attemptId, userId);
 
     //Check learners selection belongs to the correct scenario
-    const choice = await this.prisma.scenarioChoice.findUnique({
-      where: { id: dto.choiceId },
-      include: { scenario: true },
+    const scenario = await this.prisma.scenario.findUnique({
+      where: { id: dto.scenarioId },
     });
-    if (!choice || choice.scenarioId !== dto.scenarioId) {
+    if (!scenario) {
       throw new NotFoundException(
-        `Your chosen selection does not belong to the correct scenario`,
+        `Scenario and ID combination ${dto.scenarioId}not found`,
       );
     }
+
+    const choices = scenario.choices as unknown as CreateChoiceScenarioDto[];
+    const choice = choices[dto.choiceId];
+    if (!choice) {
+      throw new BadRequestException(
+        `Choice index ${dto.choiceId} does not exist on this ecenario`,
+      );
+    }
+    const cues = (scenario.cues ??
+      []) as unknown as CreateChoiceScenarioCueDto[];
+    const realCueIndexes = cues
+      .map((cue, index) => ({ cue, index }))
+      .filter(({ cue }) => cue.isCorrect)
+      .map(({ index }) => index);
+    const selectedCueIndexes = dto.selectedCueIndexes ?? [];
+    const missedCueIndexes = realCueIndexes.filter(
+      (index) => !selectedCueIndexes.includes(index),
+    );
+    const missedCues = missedCueIndexes.map((index) => cues[index]);
+
     const scenarioAttempt = await this.prisma.scenarioAttempt.create({
       data: {
-        attemptId: attempt.id,
+        moduleResultId: moduleResults.id,
         scenarioId: dto.scenarioId,
-        choiceId: dto.choiceId,
+        moduleId: scenario.moduleId,
+        selectedChoice: dto.choiceId,
+        selectedChoiceText: choice.text,
         isCorrect: choice.isCorrect,
         timeTakenSeconds: dto.timeTakenSeconds ?? 0,
+        cueSelections: selectedCueIndexes as unknown as Prisma.InputJsonValue,
+        missedCues: missedCues as unknown as Prisma.InputJsonValue,
       },
     });
+
     //Feedback enging: predefined feedback for correct/incorrect answers,
-    //also explains scenario's correct answer and why. Missed cues is TBC for now
-    //Team to decide if we have capacity/ability to implement this in the first release.
+    //also explains scenario's correct answer and why.
     return {
       ...scenarioAttempt,
       feedback: {
         message: choice.feedback,
-        correctActionExplained: choice.scenario.correctActionExplanation,
-        missedCues: [], // Placeholder for missed cues, to be implemented later
+        correctActionExplained: scenario.correctActionExplanation,
+        missedCues,
       },
     };
   }
@@ -76,11 +112,15 @@ export class AttemptsService {
     isTrainer: boolean,
     organisationId: number,
   ) {
-    const attempt = await this.prisma.attempt.findUnique({
+    const attempt = await this.prisma.moduleResults.findUnique({
       where: { id: attemptId },
       include: {
         scenarioAttempts: true,
-        user: { select: { organisationId: true } },
+        user: {
+          select: {
+            organisationId: true,
+          },
+        },
       },
     });
     if (!attempt) {
@@ -93,7 +133,7 @@ export class AttemptsService {
         `You do not have permission to view this attempt`,
       );
     }
-    if (isTrainer && attempt.user.organisationId !== organisationId) {
+    if (isTrainer && attempt.organisationId !== organisationId) {
       throw new ForbiddenException(
         'You are not authorised, this ateempt belongs to another organisation',
       );
@@ -103,7 +143,7 @@ export class AttemptsService {
 
   //Fetch an attempt and confirm it belongs to the user making the request
   private async ensureOwnedByUser(attemptId: number, userId: number) {
-    const attempt = await this.prisma.attempt.findUnique({
+    const attempt = await this.prisma.moduleResults.findUnique({
       where: { id: attemptId },
     });
     if (!attempt) {

@@ -13,7 +13,7 @@ export class AuthService {
     private prisma: PrismaService,
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.prisma.user.findFirst({
@@ -60,7 +60,10 @@ export class AuthService {
       dto.username,
       dto.email,
       dto.password,
-      dto.organisationId,
+      dto.organisationId ?? null,
+      dto.role,
+      dto.firstname,
+      dto.lastname,
     );
 
     const token = this.jwtService.sign({
