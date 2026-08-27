@@ -2,19 +2,23 @@ import {
   IsString,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsEnum,
   ArrayNotEmpty,
   ValidateNested,
+  MaxLength,
+  IsArray,
 } from 'class-validator';
-import { CreateChoiceScenarioDto } from './create-choice-scenario.dto';
-import { CreateChoiceScenarioCueDto } from './create-scenario-cue.dto';
 import { Type } from 'class-transformer';
-import { ScenarioCategory, ScenarioDifficulty } from '@prisma/client';
+import { ScenarioCategory, ScenarioDifficulty, ScenarionInteractionType } from '@prisma/client';
 import { IsFictionalEmail } from './validators/is-fictional-email.validator';
+import { IsSafeText } from './validators/is-safe-text.validator';
 
 export class CreateScenarioDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(150)
+  @IsSafeText()
   title!: string;
 
   @IsInt()
@@ -23,6 +27,8 @@ export class CreateScenarioDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(1000)
+  @IsSafeText()
   content!: string;
 
   @IsEnum(ScenarioCategory)
@@ -33,39 +39,41 @@ export class CreateScenarioDto {
   @IsNotEmpty()
   difficulty!: ScenarioDifficulty;
 
-  @IsString()
+  @IsEnum(ScenarionInteractionType)
   @IsNotEmpty()
-  interactionType!: string;
+  interactionType!: ScenarionInteractionType;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(1000)
+  @IsSafeText()
   scenarioDescription!: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsFictionalEmail()
-  sender!: string;
+  sender?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsFictionalEmail()
-  recipient!: string;
+  recipient?: string;
 
   @IsString()
-  @IsNotEmpty()
-  subject!: string;
+  @IsOptional()
+  subject?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   correctActionExplanation?: string;
 
-  @ValidateNested({ each: true })
-  @Type(() => CreateChoiceScenarioDto)
-  @ArrayNotEmpty()
-  choices?: CreateChoiceScenarioDto[];
+  @IsString()
+  @IsOptional()
+  @MaxLength(1000)
+  correctAnswer?: string;
 
-  @ValidateNested({ each: true })
-  @Type(() => CreateChoiceScenarioCueDto)
-  @ArrayNotEmpty()
-  cues?: CreateChoiceScenarioCueDto[];
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  correctCues?: string[];
 }

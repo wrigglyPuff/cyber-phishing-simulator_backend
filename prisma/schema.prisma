@@ -91,23 +91,23 @@ model Module {
 }
 
 model Scenario {
-  id                       Int               @id @default(autoincrement())
+  id                       Int                  @id @default(autoincrement())
   moduleId                 Int
   title                    String
-  content                  String            @db.VarChar(1000)
+  content                  String               @db.VarChar(1000)
   category                 ScenarioCategory
   difficulty               ScenarioDifficulty
-  interactionType          String
-  scenarioDescription      String            @db.VarChar(1000)
-  sender                   String            @db.VarChar(250)
-  recipient                String            @db.VarChar(250)
-  subject                  String            @db.VarChar(250)
-  correctActionExplanation String?           @default("Explanations coming soon") @db.VarChar(1000)
-  createdAt                DateTime          @default(now())
-  module                   Module            @relation(fields: [moduleId], references: [id])
+  interactionType          ScenarionInteractionType
+  scenarioDescription      String               @db.VarChar(1000)
+  sender                   String?              @db.VarChar(250)
+  recipient                String?              @db.VarChar(250)
+  subject                  String?              @db.VarChar(250)
+  correctActionExplanation String?              @default("Explanations coming soon") @db.VarChar(1000)
+  createdAt                DateTime             @default(now())
+  module                   Module               @relation(fields: [moduleId], references: [id])
   scenarioAttempts         ScenarioAttempt[]
-  choices                  Json
-  cues                     Json
+  correctAnswer            Json?
+  correctCues              Json
 
   @@index([moduleId], map: "Scenario_moduleId_fkey")
 }
@@ -119,6 +119,11 @@ model ScenarioAttempt {
   moduleId            Int
   isCorrect           Boolean
   timeTakenSeconds    Int
+  attemptNumber       Int
+  response            String
+  score               Int
+  startedAt           DateTime
+  completedAt         DateTime
   selectedChoice      Int?
   selectedChoiceText  String?
   createdAt           DateTime        @default(now())
@@ -127,7 +132,6 @@ model ScenarioAttempt {
   module              Module          @relation(fields:[moduleId], references:[id])
   moduleResult        ModuleResults   @relation(fields: [moduleResultId], references: [id])
   scenario         Scenario        @relation(fields: [scenarioId], references: [id])
-  //add score according to detailed flagged selections, match cueSelections and missedCues to determine score, must be 80% or more
 
   @@index([moduleResultId], map: "ScenarioAttempt_moduleResultId_fkey")
   @@index([scenarioId], map: "ScenarioAttempt_scenarioId_fkey")

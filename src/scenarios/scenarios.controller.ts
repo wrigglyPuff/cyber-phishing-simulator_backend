@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   ParseIntPipe,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -29,7 +30,7 @@ import { Role } from '@prisma/client';
 @UseGuards(JwtAuthGuard) //every route below requires a valid JWT
 @Controller('scenarios')
 export class ScenariosController {
-  constructor(private readonly scenariosService: ScenariosService) {}
+  constructor(private readonly scenariosService: ScenariosService) { }
 
   @Post()
   @UseGuards(RolesGuard)
@@ -45,15 +46,16 @@ export class ScenariosController {
   })
   @ApiQuery({ name: 'moduleId', required: false, type: Number })
   findAll(
+    @Request() req,
     @Query('moduleId', new ParseIntPipe({ optional: true })) moduleId?: number,
   ) {
-    return this.scenariosService.findAll(moduleId);
+    return this.scenariosService.findAll(moduleId, req.user.userId, req.user.role);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single scenario' })
-  findOne(@Param('id') id: string) {
-    return this.scenariosService.findOne(+id);
+  findOne(@Request() req, @Param('id') id: string) {
+    return this.scenariosService.findOne(+id, req.user.role);
   }
 
   @Patch(':id')

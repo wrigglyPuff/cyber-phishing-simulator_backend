@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsNotEmpty, IsArray } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsNotEmpty, IsArray, IsDateString, IsNumber } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateScenarioAttemptDto {
@@ -7,29 +7,36 @@ export class CreateScenarioAttemptDto {
   @IsNotEmpty()
   scenarioId!: number;
 
-  @ApiProperty({
-    example: 3,
-    description: 'The answer the learner has selected',
-  })
+
+  @ApiProperty({ example: 2, description: 'The module this scenario belongs to' })
   @IsInt()
   @IsNotEmpty()
-  choiceId!: number;
+  moduleId!: number;
 
-  @ApiPropertyOptional({
-    example: 4,
-    description:
-      'The time taken in seconds to select an answer for this scenario (optional)',
-  })
+  @ApiProperty({ example: 3, description: 'Which attempt number this is for this scenario' })
   @IsInt()
-  @IsOptional()
-  timeTakenSeconds?: number;
+  @IsNotEmpty()
+  attemptNumber!: number;
 
-  @ApiPropertyOptional({
-    example: [0, 2],
-    description:
-      "Indexes into the scenario's cues array that the learner identified as suspicious",
-  })
+  @ApiProperty({ example: 'suspicious', description: "The learner's answer" })
+  @IsString()
+  @IsNotEmpty()
+  response!: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  timeTakenSeconds!: number;
+
+  @IsDateString()
+  @IsNotEmpty()
+  startedAt: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  completedAt!: string;
+
   @IsArray()
+  @IsString()
   @IsOptional()
-  selectedCueIndexes?: number[];
+  selectedCues?: string[];
 }
