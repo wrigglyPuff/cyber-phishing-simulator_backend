@@ -22,7 +22,7 @@ import { CreateScenarioDto } from './dto/create-scenario.dto';
 import { UpdateScenarioDto } from './dto/update-scenario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles, ROLES_KEY } from '../auth/roles.decorators';
+import { Roles } from '../auth/roles.decorators';
 import { Role } from '@prisma/client';
 
 @ApiTags('scenarios')
@@ -36,8 +36,11 @@ export class ScenariosController {
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can create scenarios
   @ApiOperation({ summary: 'Create a new scenario (trainer only)' })
-  create(@Body() createScenarioDto: CreateScenarioDto) {
-    return this.scenariosService.create(createScenarioDto);
+  create(@Request() req, @Body() createScenarioDto: CreateScenarioDto) {
+    return this.scenariosService.create(
+      createScenarioDto,
+      req.user.organisationId,
+    );
   }
 
   @Get()
@@ -49,13 +52,23 @@ export class ScenariosController {
     @Request() req,
     @Query('moduleId', new ParseIntPipe({ optional: true })) moduleId?: number,
   ) {
-    return this.scenariosService.findAll(moduleId, req.user.userId, req.user.role);
+    return this.scenariosService.findAll(
+      req.user.organisationId,
+      req.user.userId,
+      req.user.role,
+      moduleId,
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single scenario' })
-  findOne(@Request() req, @Param('id') id: string) {
-    return this.scenariosService.findOne(+id, req.user.role);
+  findOne(@Request() req, @Param('id', ParseIntPipe) id: number) {
+    return this.scenariosService.findOne(
+      id,
+      req.user.organisationId,
+      req.user.userId,
+      req.user.role
+    );
   }
 
   @Patch(':id')
@@ -63,17 +76,22 @@ export class ScenariosController {
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can update scenarios
   @ApiOperation({ summary: 'Update a scenario (trainer only)' })
   update(
-    @Param('id') id: string,
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateScenarioDto: UpdateScenarioDto,
   ) {
-    return this.scenariosService.update(+id, updateScenarioDto);
+    return this.scenariosService.update(
+      id,
+      updateScenarioDto,
+      req.user.organisationId,
+    );
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can delete scenarios
   @ApiOperation({ summary: 'Delete a scenario (trainer only)' })
-  remove(@Param('id') id: string) {
-    return this.scenariosService.remove(+id);
+  remove(@Request() req, @Param('id', ParseIntPipe) id: number) {
+    return this.scenariosService.remove(id, req.user.organisationId);
   }
 }
