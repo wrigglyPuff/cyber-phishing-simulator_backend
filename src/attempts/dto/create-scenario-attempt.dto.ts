@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsOptional, IsNotEmpty, IsArray, IsDateString, IsNumber } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsNotEmpty, IsArray, IsDateString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateScenarioAttemptDto {
@@ -23,19 +23,22 @@ export class CreateScenarioAttemptDto {
   @IsNotEmpty()
   response!: string;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 350, description: 'The time taken in seconds to select an answer for this scenario' })
+  @IsInt()
+  @IsOptional()
   timeTakenSeconds!: number;
 
+  @ApiProperty({ example: '2026-07-22T12:14:00Z', description: 'When the learner opens this scenario' })
   @IsDateString()
   @IsNotEmpty()
-  startedAt: string;
+  startedAt!: string;
 
+  @ApiProperty({ example: '2026-08-22T12:14:00Z', description: 'When the learner submits their answer' })
   @IsDateString()
   @IsNotEmpty()
   completedAt!: string;
 
-  @IsArray()
+  @ApiProperty({ example: ["Dear user", "no reply-micr0soft"], description: "The text cue the learner identified as suspicious" })
   @IsString()
   @IsOptional()
   selectedCues?: string[];

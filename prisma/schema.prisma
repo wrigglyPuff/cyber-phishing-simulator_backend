@@ -54,10 +54,12 @@ enum CueTag {
 }
 
 model Organisation {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  modules Module[]
-  users   User[]
+  id            Int         @id @default(autoincrement())
+  name          String      @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  modules       Module[]
+  users         User[]
 }
 
 model User {
@@ -69,8 +71,10 @@ model User {
   passwordHash    String
   role            Role             @default(LEARNER)
   organisationId  Int?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   moduleResults   ModuleResults[]
-  organisation    Organisation?     @relation(fields: [organisationId], references: [id])
+  organisation    Organisation?    @relation(fields: [organisationId], references: [id])
 
   @@index([organisationId], map: "User_organisationId_fkey")
 }

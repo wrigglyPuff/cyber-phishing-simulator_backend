@@ -8,6 +8,9 @@ import { ScenariosModule } from './scenarios/scenarios.module';
 import { TrainingModulesModule } from './training-modules/training-modules.module';
 import { AttemptsModule } from './attempts/attempts.module';
 import { ResultsModule } from './results/results.module';
+import { OrganisationsModule } from './organisations/organisations.module';
+import { DashboardService } from './dashboard/dashboard.service';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -18,8 +21,10 @@ import { ResultsModule } from './results/results.module';
     TrainingModulesModule,
     AttemptsModule,
     ResultsModule,
+    OrganisationsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
