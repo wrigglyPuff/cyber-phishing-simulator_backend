@@ -63,18 +63,20 @@ model Organisation {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
-  username        String           @unique
-  firstName       String
-  lastName        String
-  email           String           @unique
-  passwordHash    String
-  role            Role             @default(LEARNER)
-  organisationId  Int?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  moduleResults   ModuleResults[]
-  organisation    Organisation?    @relation(fields: [organisationId], references: [id])
+  id                      Int              @id @default(autoincrement())
+  username                String           @unique
+  firstName               String
+  lastName                String
+  email                   String           @unique
+  passwordHash            String
+  role                    Role             @default(LEARNER)
+  organisationId          Int?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  moduleResults           ModuleResults[]
+  organisation            Organisation?    @relation(fields: [organisationId], references: [id])
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
 
   @@index([organisationId], map: "User_organisationId_fkey")
 }
@@ -165,4 +167,28 @@ model ModuleResults {
 
   @@index([userId], map: "ModuleResults_userId_fkey")
   @@index([moduleId], map: "ModuleResults_moduleId_fkey")
+}
+
+model PasswordResetToken {
+  id                    Int         @id @default(autoincrement())
+  tokenHash             String      @unique
+  userId                Int
+  expiresAt             DateTime
+  usedAt                DateTime?
+  createdAt             DateTime    @default(now())
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "PasswordresetToken_userId_fkey")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  userId    Int
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "RefreshToken_userId_fkey")
 }

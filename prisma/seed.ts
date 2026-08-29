@@ -26,7 +26,7 @@ async function main() {
     console.log(`Organisation ready: ${org.name} (id ${org.id})`);
 
     //Every test account uses the same password so you only remember one
-    const passwordHash = await bcrypt.hash('Password1!', 10);
+    const passwordHash = await bcrypt.hash('newPassword1!', 10); //changed PW, old password Password1!
 
     const people = [
         {

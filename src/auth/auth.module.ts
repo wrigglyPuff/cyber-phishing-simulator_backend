@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
+import { TokensService } from './tokens.service';
 
 @Module({
   imports: [
@@ -18,14 +19,18 @@ import { UsersModule } from '../users/users.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const secret = config.get<string>('JWT_SECRET');
+        const expiresIn = config.get<string>('ACCESS_TOKEN_TTL') ?? '12h';
+
         return {
-          secret: secret,
-          signOptions: { expiresIn: '12h' },
+          secret,
+          signOptions: {
+            expiresIn: expiresIn as any,
+          },
         };
       },
     }),
   ],
-  providers: [AuthService, PrismaService, JwtStrategy],
+  providers: [AuthService, PrismaService, JwtStrategy, TokensService],
   controllers: [AuthController],
 })
-export class AuthModule {}
+export class AuthModule { }

@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -57,6 +58,9 @@ export class CreateUserDto {
 
   @ApiProperty({ enum: [Role.LEARNER, Role.TRAINER], example: Role.LEARNER })
   @IsEnum(Role)
+  @IsIn([Role.LEARNER, Role.TRAINER], {
+    message: 'You can only create a learner or a trainer',
+  })
   role!: Role;
 
   @ApiPropertyOptional({
