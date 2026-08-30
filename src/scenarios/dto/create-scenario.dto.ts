@@ -10,7 +10,7 @@ import {
   IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ScenarioCategory, ScenarioDifficulty, ScenarionInteractionType } from '@prisma/client';
+import { ScenarioCategory, ScenarioDifficulty, ScenarioInteractionType } from '@prisma/client';
 import { IsFictionalEmail } from './validators/is-fictional-email.validator';
 import { IsSafeText } from './validators/is-safe-text.validator';
 
@@ -39,9 +39,9 @@ export class CreateScenarioDto {
   @IsNotEmpty()
   difficulty!: ScenarioDifficulty;
 
-  @IsEnum(ScenarionInteractionType)
+  @IsEnum(ScenarioInteractionType)
   @IsNotEmpty()
-  interactionType!: ScenarionInteractionType;
+  interactionType!: ScenarioInteractionType;
 
   @IsString()
   @IsNotEmpty()

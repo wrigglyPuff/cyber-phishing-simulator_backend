@@ -17,8 +17,8 @@ enum ScenarioCategory {
   VISHING
   SOCIAL_ENGINEERING
   MALWARE
-  RANSONWARE
-  BUISINESS_EMAIL_COMPROMISE
+  RANSOMWARE
+  BUSINESS_EMAIL_COMPROMISE
   SPEAR_PHISHING
   WHALING
 }
@@ -29,7 +29,7 @@ enum ScenarioDifficulty {
   HARD
 }
 
-enum ScenarionInteractionType {
+enum ScenarioInteractionType {
   EMAIL
   TEXT_MESSAGE
   PHONE_CALL
@@ -103,7 +103,7 @@ model Scenario {
   content                  String               @db.VarChar(1000)
   category                 ScenarioCategory
   difficulty               ScenarioDifficulty
-  interactionType          ScenarionInteractionType
+  interactionType          ScenarioInteractionType
   scenarioDescription      String               @db.VarChar(1000)
   sender                   String?              @db.VarChar(250)
   recipient                String?              @db.VarChar(250)
