@@ -61,17 +61,18 @@ export class TrainingModulesController {
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
   @ApiOperation({ summary: 'Update a training module (trainer only)' })
   update(
+    @Req() req: any,
     @Param('id') id: string,
     @Body() updateTrainingModuleDto: UpdateTrainingModuleDto,
   ) {
-    return this.trainingModulesService.update(+id, updateTrainingModuleDto);
+    return this.trainingModulesService.update(+id, updateTrainingModuleDto, req.user.organisationId);
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) @ApiOperation({ summary: 'Delete a training module (trainer only)' })
-  remove(@Param('id') id: string) {
-    return this.trainingModulesService.remove(+id);
+  remove(@Req() req: any, @Param('id') id: string) {
+    return this.trainingModulesService.remove(+id, req.user.organisationId);
   }
 
   @Post(':moduleId/assignments')

@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { TokensService } from './tokens.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -29,6 +30,17 @@ describe('AuthService', () => {
           provide: JwtService,
           useValue: {
             sign: jest.fn(),
+          },
+        },
+        {
+          provide: TokensService,
+          useValue: {
+            issueRefreshToken: jest.fn(),
+            validateRefreshToken: jest.fn(),
+            revokeRefreshToken: jest.fn(),
+            revokeAllRefreshTokensForUser: jest.fn(),
+            issueResetToken: jest.fn(),
+            consumeResetToken: jest.fn(),
           },
         },
       ],

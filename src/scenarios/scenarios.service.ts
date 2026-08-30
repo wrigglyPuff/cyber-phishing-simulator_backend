@@ -244,10 +244,6 @@ export class ScenariosService {
       where: { id },
     });
 
-    return this.prisma.scenario.delete({
-      where: { id },
-    });
-
     return { message: 'Scenario deleted successfully' };
   }
 }

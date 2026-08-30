@@ -7,23 +7,26 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
+
 import { ResultsService } from './results.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorators';
+import { Role } from '@prisma/client';
 
 @ApiTags('results')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('results')
 export class ResultsController {
-  constructor(private readonly resultsService: ResultsService) {}
+  constructor(private readonly resultsService: ResultsService) { }
 
   @Post('attempts/:attemptId/finalize')
   @ApiOperation({ summary: 'Finalize an attempt and store the result' })
@@ -33,25 +36,25 @@ export class ResultsController {
 
   @Get('me')
   @ApiOperation({
-    summary: "Logged in learner's own results, per module and per scenario",
+    summary: "Detailed results for learner, sorted by module and scenario",
   })
   @ApiQuery({ name: 'moduleId', required: false, type: Number })
-  getMyResults(@Request() req, @Query('moduleId') moduleId?: string) {
+  getMyResults(@Request() req, @Query('moduleId') moduleId?: string,) {
     return this.resultsService.getMySummary(
       req.user.userId,
       moduleId ? +moduleId : undefined,
     );
   }
 
-  @Get('module/:moduleId')
+  @Get('user/:userId')
   @UseGuards(RolesGuard)
-  @Roles('trainer')
+  @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
   @ApiOperation({
     summary:
-      "Trainer's view of all learners' results for a specific module, by ID (same organisation only)",
+      "Trainer's view of a specific learner's results (same organisation only)"
   })
   @ApiQuery({ name: 'moduleId', required: false, type: Number })
-  getLearnerSummary(
+  getLearnersSummary(
     @Request() req,
     @Param('userId') userId: string,
     @Query('moduleId') moduleId?: string,
@@ -62,9 +65,10 @@ export class ResultsController {
       moduleId ? +moduleId : undefined,
     );
   }
+
   @Get('module/:moduleId')
   @UseGuards(RolesGuard)
-  @Roles('trainer')
+  @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
   @ApiOperation({
     summary:
       "Trainer's view of all learner's results for a specific module (same organisation only)",

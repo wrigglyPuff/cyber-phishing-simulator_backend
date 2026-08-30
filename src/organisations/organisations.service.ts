@@ -55,6 +55,7 @@ export class OrganisationsService {
             throw new NotFoundException(`Organisation ${id} not found`);
         }
 
+        //Checks if user has permission to access organisation
         assertOrganisationAccess(organisation.id, requester);
 
         const counts = await this.countMembers(organisation.id);
@@ -79,6 +80,7 @@ export class OrganisationsService {
             throw new NotFoundException(`Organisation ${id} not found`);
         }
 
+        //Checks if user has permission to access organisation
         assertOrganisationAccess(organisation.id, requester);
 
         if (updateOrganisationDto.name !== undefined) {

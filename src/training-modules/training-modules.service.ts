@@ -50,8 +50,12 @@ export class TrainingModulesService {
     return module;
   }
 
-  async update(id: number, updateTrainingModuleDto: UpdateTrainingModuleDto) {
-    await this.ensureExists(id);
+  async update(
+    id: number,
+    updateTrainingModuleDto: UpdateTrainingModuleDto,
+    organisationId: number,
+  ) {
+    await this.loadModuleForOrganisation(id, organisationId);
 
     return this.prisma.module.update({
       where: { id },
@@ -59,8 +63,8 @@ export class TrainingModulesService {
     });
   }
 
-  async remove(id: number) {
-    await this.ensureExists(id);
+  async remove(id: number, organisationId: number) {
+    await this.loadModuleForOrganisation(id, organisationId);
 
     return this.prisma.module.delete({
       where: { id },

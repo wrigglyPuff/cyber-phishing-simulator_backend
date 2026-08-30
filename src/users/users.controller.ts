@@ -18,15 +18,19 @@ import { Role } from '@prisma/client';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary:
+      'Get the logged-in user profile'
+  })
   @Get('me')
   getProfile(@Request() req) {
     return req.user;
@@ -34,6 +38,10 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
+  @ApiOperation({
+    summary:
+      'List learners in your organisation (trainer only)'
+  })
   @Get('learners')
   getLearners(
     @Request() req,
@@ -47,18 +55,30 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
+  @ApiOperation({
+    summary:
+      'Create a learner or trainer (trainer only)'
+  })
   @Post()
   createUser(@Request() req, @Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary:
+      'Get one user (staff or the user themselves)'
+  })
   @Get(':id')
   findOneUser(@Request() req, @Param('id', ParseIntPipe) id: number) {
     return this.usersService.findOneUser(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary:
+      'Update email, password, or name'
+  })
   @Patch(':id')
   updateUser(
     @Request() req,
@@ -70,6 +90,10 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
+  @ApiOperation({
+    summary:
+      'Delete a user (trainer only)'
+  })
   @Delete(':id')
   removeUser(@Request() req, @Param('id', ParseIntPipe) id: number) {
     return this.usersService.removeUser(id, req.user);
