@@ -147,7 +147,7 @@ export class UsersService {
     assertOrganisationAccess(
       target.organisationId,
       requester,
-      'That user is not in your organisation',
+      `Requester ${requester.userId} (org ${requester.organisationId}) cannot access ${target.id} (org ${target.organisationId}), user is not in your organisation`,
     );
   }
 

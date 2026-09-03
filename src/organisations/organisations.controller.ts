@@ -19,7 +19,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorators';
 import { Role } from '@prisma/client';
 
-@ApiTags('organisations')
+@ApiTags('Organisations')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('organisations')

@@ -15,7 +15,7 @@ import { CreateScenarioAttemptDto } from './dto/create-scenario-attempt.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { FindAttemptsDto } from './find-attempts.dto';
 
-@ApiTags('attempts')
+@ApiTags('Attempts')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard) // every route below requires a valid JWT
 @Controller('attempts')

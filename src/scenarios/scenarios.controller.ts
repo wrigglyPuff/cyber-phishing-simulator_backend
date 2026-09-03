@@ -25,7 +25,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorators';
 import { Role } from '@prisma/client';
 
-@ApiTags('scenarios')
+@ApiTags('Scenarios')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard) //every route below requires a valid JWT
 @Controller('scenarios')
@@ -35,7 +35,7 @@ export class ScenariosController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can create scenarios
-  @ApiOperation({ summary: 'Create a new scenario (trainer only)' })
+  @ApiOperation({ summary: 'Create a new scenario (trainer & admin only)' })
   create(@Request() req, @Body() createScenarioDto: CreateScenarioDto) {
     return this.scenariosService.create(
       createScenarioDto,
@@ -74,7 +74,7 @@ export class ScenariosController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can update scenarios
-  @ApiOperation({ summary: 'Update a scenario (trainer only)' })
+  @ApiOperation({ summary: 'Update a scenario (trainer & admin only)' })
   update(
     @Request() req,
     @Param('id', ParseIntPipe) id: number,
@@ -90,7 +90,7 @@ export class ScenariosController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can delete scenarios
-  @ApiOperation({ summary: 'Delete a scenario (trainer only)' })
+  @ApiOperation({ summary: 'Delete a scenario (trainer & admin only)' })
   remove(@Request() req, @Param('id', ParseIntPipe) id: number) {
     return this.scenariosService.remove(id, req.user.organisationId);
   }

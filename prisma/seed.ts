@@ -25,13 +25,11 @@ async function main() {
     });
     console.log(`Organisation ready: ${org.name} (id ${org.id})`);
 
-    //Every test account uses the same password so you only remember one
-    const passwordHash = await bcrypt.hash('newPassword1!', 10); //changed PW, old password Password1!
-
     const people = [
         {
             username: 'admin',
             email: 'admin@test.com',
+            password: 'Password1!',
             firstName: 'Ada',
             lastName: 'Admin',
             role: Role.GLOBAL_ADMIN,
@@ -40,6 +38,7 @@ async function main() {
         {
             username: 'trainer',
             email: 'trainer@test.com',
+            password: 'Password1!',
             firstName: 'Tom',
             lastName: 'Trainer',
             role: Role.TRAINER,
@@ -48,6 +47,7 @@ async function main() {
         {
             username: 'learner',
             email: 'learner@test.com',
+            password: 'newPassword1!',
             firstName: 'Lena',
             lastName: 'Learner',
             role: Role.LEARNER,
@@ -56,10 +56,12 @@ async function main() {
     ];
 
     for (const person of people) {
+        const { password, ...details } = person;
+        const passwordHash = await bcrypt.hash(password, 10);
         const user = await prisma.user.upsert({
-            where: { email: person.email },
+            where: { email: details.email },
             update: { passwordHash }, //resets the password if you run this again
-            create: { ...person, passwordHash },
+            create: { ...details, passwordHash },
         });
         console.log(`${user.role.padEnd(12)} ${user.email}`);
     }

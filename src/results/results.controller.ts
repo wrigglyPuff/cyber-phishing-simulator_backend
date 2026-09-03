@@ -21,7 +21,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorators';
 import { Role } from '@prisma/client';
 
-@ApiTags('results')
+@ApiTags('Results')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('results')

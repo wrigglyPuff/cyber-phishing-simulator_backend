@@ -77,17 +77,20 @@ model User {
   organisation            Organisation?    @relation(fields: [organisationId], references: [id])
   refreshTokens           RefreshToken[]
   passwordResetTokens     PasswordResetToken[]
-
+  createdModules          Module[]         
+  
   @@index([organisationId], map: "User_organisationId_fkey")
 }
 
 model Module {
-  id              Int              @id @default(autoincrement())
-  title           String
-  description     String
-  createdAt       DateTime         @default(now())
-  organisationId  Int
-  assignedUsers   Json?           //array list of userId's
+  id               Int              @id @default(autoincrement())
+  title            String
+  description      String
+  createdAt        DateTime         @default(now())
+  createdById      Int?
+  organisationId   Int
+  assignedUsers    Json?           //array list of userId's
+  createdBy        User?            @relation(fields: [createdById], references: [id])
   organisation    Organisation     @relation(fields: [organisationId], references: [id])
   scenarios       Scenario[]
   scenarioAttempts ScenarioAttempt[]

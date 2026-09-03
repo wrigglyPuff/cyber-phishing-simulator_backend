@@ -32,53 +32,53 @@ export class TrainingModulesController {
   @Post()
   @UseGuards(RolesGuard) //only trainers can create modules
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
-  @ApiOperation({ summary: 'Create a new training module (trainer only)' })
+  @ApiOperation({ summary: 'Create a new training module (trainer & admin only)' })
   create(
     @Body() createTrainingModuleDto: CreateTrainingModuleDto,
     @Req() req: any,
   ) {
     return this.trainingModulesService.create(
       createTrainingModuleDto,
-      req.user.organisationId,
+      req.user,
     );
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all training modules)' })
+  @ApiOperation({ summary: 'List all training modules' })
   findAll(@Req() req: any) {
-    return this.trainingModulesService.findAll(req.user.organisationId);
+    return this.trainingModulesService.findAll(req.user);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single module, including its scenarios)' })
-  findOne(@Param('id') id: string, @Req() req: any) {
-    return this.trainingModulesService.findOne(+id, req.user.organisationId);
+  @ApiOperation({ summary: 'Get a single module, including its scenarios' })
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    return this.trainingModulesService.findOne(id, req.user);
     //protection validator
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
-  @ApiOperation({ summary: 'Update a training module (trainer only)' })
+  @ApiOperation({ summary: 'Update a training module (admin & trainer only)' })
   update(
     @Req() req: any,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateTrainingModuleDto: UpdateTrainingModuleDto,
   ) {
-    return this.trainingModulesService.update(+id, updateTrainingModuleDto, req.user.organisationId);
+    return this.trainingModulesService.update(id, updateTrainingModuleDto, req.user);
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) @ApiOperation({ summary: 'Delete a training module (trainer only)' })
-  remove(@Req() req: any, @Param('id') id: string) {
-    return this.trainingModulesService.remove(+id, req.user.organisationId);
+  @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) @ApiOperation({ summary: 'Delete a training module (admin & trainer only)' })
+  remove(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+    return this.trainingModulesService.remove(id, req.user.organisationId);
   }
 
   @Post(':moduleId/assignments')
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
-  @ApiOperation({ summary: 'Assign a learner to a module (trainer only)' })
+  @ApiOperation({ summary: 'Assign a learner to a module (admin & trainer only)' })
   assignUser(
     @Req() req: any,
     @Param('moduleId', ParseIntPipe) moduleId: number,
@@ -94,7 +94,7 @@ export class TrainingModulesController {
   @Delete(':moduleId/assignments/:userId')
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
-  @ApiOperation({ summary: 'Unassign a learner from a module (trainer only)' })
+  @ApiOperation({ summary: 'Unassign a learner from a module (admin & trainer only)' })
   unassignUser(
     @Req() req: any,
     @Param('moduleId', ParseIntPipe) moduleId: number,
