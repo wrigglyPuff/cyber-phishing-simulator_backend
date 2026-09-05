@@ -34,6 +34,7 @@ export class ScenariosService {
       title: scenario.title,
       content: scenario.content,
       interactionType: scenario.interactionType,
+      difficulty: scenario.difficulty,
     };
   }
 
