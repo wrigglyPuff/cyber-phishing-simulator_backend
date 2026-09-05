@@ -77,10 +77,14 @@ export class TrainingModulesService {
   }
 
   //Global admins see every module, everyone else only sees their own org
-  async findAll(requester: RequestUser) {
+  //assignedToMe further narrows the list to modules the caller is assigned to
+  async findAll(requester: RequestUser, assignedToMe?: boolean) {
     const isGlobalAdmin = requester.role === Role.GLOBAL_ADMIN;
 
-    let where: { organisationId?: number } = {};
+    let where: {
+      organisationId?: number;
+      assignedUsers?: { array_contains: number };
+    } = {};
     if (!isGlobalAdmin) {
       if (requester.organisationId === null) {
         throw new ForbiddenException(
@@ -88,6 +92,9 @@ export class TrainingModulesService {
         );
       }
       where = { organisationId: requester.organisationId };
+    }
+    if (assignedToMe) {
+      where = { ...where, assignedUsers: { array_contains: requester.userId } };
     }
 
     const modules = await this.prisma.module.findMany({

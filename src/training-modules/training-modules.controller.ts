@@ -8,7 +8,9 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
   ParseIntPipe,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { TrainingModulesService } from './training-modules.service';
 import { CreateTrainingModuleDto } from './dto/create-training-module.dto';
@@ -18,7 +20,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorators';
 import { Role } from '@prisma/client';
 import { AssignUserDto } from './dto/assign-user.dto';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Training Modules')
 @ApiBearerAuth()
@@ -44,9 +46,13 @@ export class TrainingModulesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all training modules' })
-  findAll(@Req() req: any) {
-    return this.trainingModulesService.findAll(req.user);
+  @ApiOperation({ summary: 'List training modules, optionally filtered to the current user\'s assigned modules' })
+  @ApiQuery({ name: 'assignedToMe', required: false, type: Boolean })
+  findAll(
+    @Req() req: any,
+    @Query('assignedToMe', new ParseBoolPipe({ optional: true })) assignedToMe?: boolean,
+  ) {
+    return this.trainingModulesService.findAll(req.user, assignedToMe);
   }
 
   @Get(':id')
