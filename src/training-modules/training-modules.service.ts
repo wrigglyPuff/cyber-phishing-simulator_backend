@@ -240,6 +240,9 @@ export class TrainingModulesService {
           userId: user.id,
           userName: user.username,
         })),
+      //plain id list, for callers (e.g. the module-edit page) that just need
+      //to match against a learner list they already have, not full profiles
+      assignedUserIds,
     };
   }
 
