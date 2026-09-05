@@ -27,6 +27,13 @@ export class ScenariosService {
     return module;
   }
 
+  //Exposes which answer field is set, never the answer itself
+  private getAnswerMode(scenario: Scenario): 'simple' | 'detailed' {
+    const hasCues =
+      Array.isArray(scenario.correctCues) && scenario.correctCues.length > 0;
+    return hasCues ? 'detailed' : 'simple';
+  }
+
   private toLearnerView(scenario: Scenario) {
     return {
       scenarioId: scenario.id,
@@ -35,6 +42,7 @@ export class ScenariosService {
       content: scenario.content,
       interactionType: scenario.interactionType,
       difficulty: scenario.difficulty,
+      answerMode: this.getAnswerMode(scenario),
     };
   }
 

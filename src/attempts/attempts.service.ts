@@ -13,13 +13,25 @@ import { Status, Prisma } from '@prisma/client';
 export class AttemptsService {
   constructor(private prisma: PrismaService) { }
 
-  // Create a new attempt row when a learner starts a module
+  // Create a new attempt row when a learner starts a module, or hand back
+  // the learner's existing IN_PROGRESS attempt for that module if one exists
   async createAttempt(userId: number, dto: CreateAttemptDto) {
     const module = await this.prisma.module.findUnique({
       where: { id: dto.moduleId },
     });
     if (!module) {
       throw new NotFoundException(`Module with ID ${dto.moduleId} not found`);
+    }
+
+    const existingAttempt = await this.prisma.moduleResults.findFirst({
+      where: {
+        userId,
+        moduleId: dto.moduleId,
+        status: Status.IN_PROGRESS,
+      },
+    });
+    if (existingAttempt) {
+      return existingAttempt;
     }
 
     return this.prisma.moduleResults.create({
