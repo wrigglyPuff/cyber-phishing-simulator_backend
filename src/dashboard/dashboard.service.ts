@@ -45,14 +45,16 @@ export class DashboardService {
 
         const modules = await this.prisma.module.findMany({
             where: { organisationId: orgId },
-            select: { id: true, assignedUsers: true },
+            select: { id: true, title: true, assignedUsers: true },
         });
 
         let activeModules = 0;
         let totalAssignments = 0;
+        const assignedCountByModule = new Map<number, number>();
 
         for (const module of modules) {
             const assigned = this.readAssignedUsers(module.assignedUsers);
+            assignedCountByModule.set(module.id, assigned.length);
             if (assigned.length > 0) {
                 activeModules++;
             }
@@ -61,10 +63,17 @@ export class DashboardService {
 
         const completedResults = await this.prisma.moduleResults.findMany({
             where: { organisationId: orgId, status: Status.COMPLETED },
-            select: { percentage_score: true },
+            select: { moduleId: true, percentage_score: true },
         });
 
         const completedCount = completedResults.length;
+        const completedCountByModule = new Map<number, number>();
+        for (const result of completedResults) {
+            completedCountByModule.set(
+                result.moduleId,
+                (completedCountByModule.get(result.moduleId) ?? 0) + 1,
+            );
+        }
 
         const overallCompletionRate =
             totalAssignments === 0
@@ -81,11 +90,25 @@ export class DashboardService {
                     ) / completedCount,
                 );
 
+        const moduleCompletion = modules.map((module) => {
+            const assignedCount = assignedCountByModule.get(module.id) ?? 0;
+            const completedForModule = completedCountByModule.get(module.id) ?? 0;
+            return {
+                moduleId: module.id,
+                moduleName: module.title,
+                completionPercentage:
+                    assignedCount === 0
+                        ? 0
+                        : Math.round((completedForModule / assignedCount) * 100),
+            };
+        });
+
         return {
             totalLearners,
             activeModules,
             overallCompletionRate,
             averageScore,
+            moduleCompletion,
         };
     }
 
