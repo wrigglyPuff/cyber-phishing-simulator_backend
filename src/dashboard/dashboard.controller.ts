@@ -6,12 +6,14 @@ import {
     Request,
     UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorators';
 import { Role } from '@prisma/client';
+import { DashboardOverviewDto } from './dto/dashboard-overview.dto';
+import { DashboardActivityDto } from './dto/dashboard-activity.dto';
 
 @ApiTags('Trainer Dashboard')
 @ApiBearerAuth()
@@ -25,6 +27,7 @@ export class DashboardController {
     @ApiOperation({
         summary: 'Headline training stats for an organisation (trainer only)',
     })
+    @ApiOkResponse({ type: DashboardOverviewDto })
     getOverview(@Request() req, @Param('orgId', ParseIntPipe) orgId: number) {
         return this.dashboardService.getOverview(
             orgId,
@@ -37,6 +40,7 @@ export class DashboardController {
     @ApiOperation({
         summary: 'Ten most recent learner activity items (trainer only)',
     })
+    @ApiOkResponse({ type: DashboardActivityDto })
     getActivity(@Request() req, @Param('orgId', ParseIntPipe) orgId: number) {
         return this.dashboardService.getActivity(
             orgId,

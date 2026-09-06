@@ -7,10 +7,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as bcrypt from 'bcrypt';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, Status } from '@prisma/client';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { assertOrganisationAccess } from '../common/organisation-access';
+import { LearnerResponseDto } from './dto/learner-response.dto';
+
+//A learner is "weak" in a category once their accuracy in it drops below this
+const WEAKNESS_ACCURACY_THRESHOLD = 0.7;
 
 //Built by JwtStrategy.validate(), req.user shape
 type Requester = {
@@ -83,16 +87,44 @@ export class UsersService {
   async findLearners(
     requestingUser: { role: Role; organisationId: number | null },
     orgnaisationIdFilter?: number,
+  ): Promise<LearnerResponseDto[]> {
+    const learners = await this.findUsersByRole(
+      Role.LEARNER,
+      requestingUser,
+      orgnaisationIdFilter,
+    );
+    return this.attachLearnerAnalytics(learners);
+  }
+
+  findTrainers(
+    requestingUser: { role: Role; organisationId: number | null },
+    orgnaisationIdFilter?: number,
+  ) {
+    return this.findUsersByRole(Role.TRAINER, requestingUser, orgnaisationIdFilter);
+  }
+
+  private async findUsersByRole(
+    role: Role,
+    requestingUser: { role: Role; organisationId: number | null },
+    orgnaisationIdFilter?: number,
   ) {
     if (requestingUser.role == Role.GLOBAL_ADMIN) {
       return this.prisma.user.findMany({
         where: {
-          role: Role.LEARNER,
+          role,
           ...(orgnaisationIdFilter
             ? { organisationId: orgnaisationIdFilter }
             : {}),
         },
-        select: { id: true, username: true, email: true, organisationId: true },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          organisationId: true,
+        },
       });
     }
     if (!requestingUser.organisationId) {
@@ -100,10 +132,186 @@ export class UsersService {
     }
     return this.prisma.user.findMany({
       where: {
-        role: Role.LEARNER,
+        role,
         organisationId: requestingUser.organisationId,
       },
-      select: { id: true, username: true, email: true, organisationId: true },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        organisationId: true,
+      },
+    });
+  }
+
+  //assignedUsers is a Json column, this always hands back a safe number[]
+  private readAssignedUsers(value: unknown): number[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+    return value.filter((item): item is number => typeof item === 'number');
+  }
+
+  //Bulk-computes progress/score/activity/weakness stats for a list of learners
+  //in a handful of queries total, regardless of how many learners there are
+  private async attachLearnerAnalytics(
+    learners: {
+      id: number;
+      username: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      role: Role;
+      organisationId: number | null;
+    }[],
+  ): Promise<LearnerResponseDto[]> {
+    const learnerIds = learners.map((learner) => learner.id);
+    if (learnerIds.length === 0) {
+      return [];
+    }
+
+    const organisationIds = [
+      ...new Set(
+        learners
+          .map((learner) => learner.organisationId)
+          .filter((id): id is number => id !== null),
+      ),
+    ];
+
+    const [modules, moduleResults, scenarioAttempts] = await Promise.all([
+      this.prisma.module.findMany({
+        where: { organisationId: { in: organisationIds } },
+        select: { id: true, assignedUsers: true },
+      }),
+      this.prisma.moduleResults.findMany({
+        where: { userId: { in: learnerIds } },
+        select: {
+          userId: true,
+          moduleId: true,
+          status: true,
+          percentage_score: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.scenarioAttempt.findMany({
+        where: { moduleResult: { userId: { in: learnerIds } } },
+        select: {
+          isCorrect: true,
+          completedAt: true,
+          scenario: { select: { category: true } },
+          moduleResult: { select: { userId: true } },
+        },
+      }),
+    ]);
+
+    //learnerId -> set of moduleIds assigned to them
+    const assignedModulesByLearner = new Map<number, Set<number>>();
+    for (const module of modules) {
+      for (const userId of this.readAssignedUsers(module.assignedUsers)) {
+        if (!assignedModulesByLearner.has(userId)) {
+          assignedModulesByLearner.set(userId, new Set());
+        }
+        assignedModulesByLearner.get(userId)!.add(module.id);
+      }
+    }
+
+    //learnerId -> their moduleResults rows
+    const resultsByLearner = new Map<number, typeof moduleResults>();
+    for (const result of moduleResults) {
+      if (!resultsByLearner.has(result.userId)) {
+        resultsByLearner.set(result.userId, []);
+      }
+      resultsByLearner.get(result.userId)!.push(result);
+    }
+
+    //learnerId -> their scenarioAttempt rows
+    const attemptsByLearner = new Map<number, typeof scenarioAttempts>();
+    for (const attempt of scenarioAttempts) {
+      const userId = attempt.moduleResult.userId;
+      if (!attemptsByLearner.has(userId)) {
+        attemptsByLearner.set(userId, []);
+      }
+      attemptsByLearner.get(userId)!.push(attempt);
+    }
+
+    return learners.map((learner) => {
+      const assignedModuleIds =
+        assignedModulesByLearner.get(learner.id) ?? new Set<number>();
+      const results = resultsByLearner.get(learner.id) ?? [];
+      const attempts = attemptsByLearner.get(learner.id) ?? [];
+
+      const completedAssignedCount = results.filter(
+        (result) =>
+          result.status === Status.COMPLETED &&
+          assignedModuleIds.has(result.moduleId),
+      ).length;
+      const progressPercentage =
+        assignedModuleIds.size === 0
+          ? 0
+          : Math.round(
+              (completedAssignedCount / assignedModuleIds.size) * 100,
+            );
+
+      const completedResults = results.filter(
+        (result) => result.status === Status.COMPLETED,
+      );
+      const averageScore =
+        completedResults.length === 0
+          ? null
+          : Math.round(
+              completedResults.reduce(
+                (sum, result) => sum + result.percentage_score,
+                0,
+              ) / completedResults.length,
+            );
+
+      let lastActiveAt: Date | null = null;
+      if (attempts.length > 0) {
+        lastActiveAt = attempts.reduce(
+          (latest, attempt) =>
+            attempt.completedAt > latest ? attempt.completedAt : latest,
+          attempts[0].completedAt,
+        );
+      } else if (results.length > 0) {
+        lastActiveAt = results.reduce(
+          (latest, result) =>
+            result.createdAt > latest ? result.createdAt : latest,
+          results[0].createdAt,
+        );
+      }
+
+      const categoryStats = new Map<
+        string,
+        { correct: number; total: number }
+      >();
+      for (const attempt of attempts) {
+        const category = attempt.scenario.category;
+        const stat = categoryStats.get(category) ?? { correct: 0, total: 0 };
+        stat.total += 1;
+        if (attempt.isCorrect) {
+          stat.correct += 1;
+        }
+        categoryStats.set(category, stat);
+      }
+      const weaknesses = Array.from(categoryStats.entries())
+        .map(([category, stat]) => ({
+          category,
+          accuracy: stat.correct / stat.total,
+        }))
+        .filter((entry) => entry.accuracy < WEAKNESS_ACCURACY_THRESHOLD)
+        .sort((a, b) => a.accuracy - b.accuracy)
+        .map((entry) => entry.category);
+
+      return {
+        ...learner,
+        progressPercentage,
+        averageScore,
+        lastActiveAt: lastActiveAt ? lastActiveAt.toISOString() : null,
+        weaknesses,
+      } as LearnerResponseDto;
     });
   }
 

@@ -18,7 +18,8 @@ import { Role } from '@prisma/client';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import { LearnerResponseDto } from './dto/learner-response.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -40,14 +41,32 @@ export class UsersController {
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
   @ApiOperation({
     summary:
-      'List learners in your organisation (trainer only)'
+      'List learners in your organisation, with progress/score/activity/weakness analytics (trainer only)'
   })
+  @ApiOkResponse({ type: [LearnerResponseDto] })
   @Get('learners')
   getLearners(
     @Request() req,
     @Query('organisationId') organisationId?: string,
   ) {
     return this.usersService.findLearners(
+      req.user,
+      organisationId ? parseInt(organisationId, 10) : undefined,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)
+  @ApiOperation({
+    summary:
+      'List trainers in your organisation (trainer only)'
+  })
+  @Get('trainers')
+  getTrainers(
+    @Request() req,
+    @Query('organisationId') organisationId?: string,
+  ) {
+    return this.usersService.findTrainers(
       req.user,
       organisationId ? parseInt(organisationId, 10) : undefined,
     );

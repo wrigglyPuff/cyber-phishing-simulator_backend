@@ -13,6 +13,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiQuery,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 
 import { ResultsService } from './results.service';
@@ -20,6 +21,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorators';
 import { Role } from '@prisma/client';
+import { LearnerResultsSummaryDto } from './dto/learner-results-summary.dto';
+import { ModuleResultsSummaryDto } from './dto/module-results-summary.dto';
 
 @ApiTags('Results')
 @ApiBearerAuth()
@@ -39,6 +42,7 @@ export class ResultsController {
     summary: "Detailed results for learner, sorted by module and scenario",
   })
   @ApiQuery({ name: 'moduleId', required: false, type: Number })
+  @ApiOkResponse({ type: LearnerResultsSummaryDto })
   getMyResults(@Request() req, @Query('moduleId') moduleId?: string,) {
     return this.resultsService.getMySummary(
       req.user.userId,
@@ -54,6 +58,7 @@ export class ResultsController {
       "Trainer's view of a specific learner's results (same organisation only)"
   })
   @ApiQuery({ name: 'moduleId', required: false, type: Number })
+  @ApiOkResponse({ type: LearnerResultsSummaryDto })
   getLearnersSummary(
     @Request() req,
     @Param('userId') userId: string,
@@ -73,6 +78,7 @@ export class ResultsController {
     summary:
       "Trainer's view of all learner's results for a specific module (same organisation only)",
   })
+  @ApiOkResponse({ type: ModuleResultsSummaryDto })
   getModuleResults(@Request() req, @Param('moduleId') moduleId: string) {
     return this.resultsService.getModuleResults(
       +moduleId,
