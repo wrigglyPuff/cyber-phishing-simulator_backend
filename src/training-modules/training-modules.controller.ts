@@ -78,7 +78,7 @@ export class TrainingModulesController {
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) @ApiOperation({ summary: 'Delete a training module (admin & trainer only)' })
   remove(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.trainingModulesService.remove(id, req.user.organisationId);
+    return this.trainingModulesService.remove(id, req.user);
   }
 
   @Post(':moduleId/assignments')
@@ -93,7 +93,7 @@ export class TrainingModulesController {
     return this.trainingModulesService.assignUser(
       moduleId,
       assignUserDto.userId,
-      req.user.organisationId,
+      req.user,
     );
   }
 
@@ -109,7 +109,7 @@ export class TrainingModulesController {
     return this.trainingModulesService.unassignUser(
       moduleId,
       userId,
-      req.user.organisationId,
+      req.user,
     );
   }
 }

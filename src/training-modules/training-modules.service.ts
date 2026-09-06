@@ -44,14 +44,39 @@ export class TrainingModulesService {
     createTrainingModuleDto: CreateTrainingModuleDto,
     requester: RequestUser,
   ) {
-    const organisationId = requester.organisationId;
-    if (organisationId === null) {
-      throw new BadRequestException(
-        'Your account is not linked to an organisation, so it cannot create a module',
-      );
+    const isGlobalAdmin = requester.role === Role.GLOBAL_ADMIN;
+    let organisationId: number;
+
+    if (isGlobalAdmin) {
+      //Admins have their own org and must specify which org the module will belong to.
+      if (createTrainingModuleDto.organisationId === undefined) {
+        throw new BadRequestException(
+          'An organisationId is required when creating a module, permission granted for global admins only',
+        );
+      }
+      organisationId = createTrainingModuleDto.organisationId;
+
+      const organisation = await this.prisma.organisation.findUnique({
+        where: { id: organisationId },
+      });
+      if (!organisation) {
+        throw new NotFoundException(`Organisation ${organisationId} not found`);
+      }
+    } else {
+      //Everyone else gets their org from the token and may not override it
+      if (createTrainingModuleDto.organisationId !== undefined) {
+        throw new ForbiddenException(
+          'Only a global admin may set an organisationId',
+        );
+      }
+      if (requester.organisationId === null) {
+        throw new BadRequestException(
+          'Your account is not linked to an organisation, you cannot create a module',
+        );
+      }
+      organisationId = requester.organisationId;
     }
 
-    const isGlobalAdmin = requester.role === Role.GLOBAL_ADMIN;
     const scenarioIds = createTrainingModuleDto.scenarios ?? [];
     const assignedUserIds = createTrainingModuleDto.assignedUsers ?? [];
 
@@ -190,8 +215,8 @@ export class TrainingModulesService {
     return this.findOne(id, requester);
   }
 
-  async remove(id: number, organisationId: number) {
-    await this.loadModuleForOrganisation(id, organisationId);
+  async remove(id: number, requester: RequestUser) {
+    const module = await this.loadModuleForRequester(id, requester);
 
     return this.prisma.module.delete({
       where: { id },
@@ -290,10 +315,6 @@ export class TrainingModulesService {
       );
     }
 
-    if (isGlobalAdmin) {
-      return;
-    }
-
     const wrongOrganisation = scenarios.filter(
       (scenario) => scenario.module.organisationId !== organisationId,
     );
@@ -326,10 +347,6 @@ export class TrainingModulesService {
       throw new NotFoundException(`User(s) not found: ${missing.join(', ')}`);
     }
 
-    if (isGlobalAdmin) {
-      return;
-    }
-
     const wrongOrganisation = users.filter(
       (user) => user.organisationId !== organisationId,
     );
@@ -356,29 +373,10 @@ export class TrainingModulesService {
     return module;
   }
 
-  //Checks for both assign and unassign
-  private async loadModuleForOrganisation(
-    moduleId: number,
-    organisationId: number,
-  ) {
-    const module = await this.prisma.module.findUnique({
-      where: { id: moduleId },
-    });
-    if (!module) {
-      throw new NotFoundException(`Module ${moduleId} not found`);
-    }
-    if (module.organisationId !== organisationId) {
-      throw new ForbiddenException(
-        'You do not have permission to change this module',
-      );
-    }
-    return module;
-  }
-
-  async assignUser(moduleId: number, userId: number, organisationId: number) {
-    const module = await this.loadModuleForOrganisation(
+  async assignUser(moduleId: number, userId: number, requester: RequestUser) {
+    const module = await this.loadModuleForRequester(
       moduleId,
-      organisationId,
+      requester
     );
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -408,10 +406,10 @@ export class TrainingModulesService {
     return { moduleId, assignedUsers: updatedAssignedUsers };
   }
 
-  async unassignUser(moduleId: number, userId: number, organisationId: number) {
-    const module = await this.loadModuleForOrganisation(
+  async unassignUser(moduleId: number, userId: number, requester: RequestUser) {
+    const module = await this.loadModuleForRequester(
       moduleId,
-      organisationId,
+      requester
     );
 
     const assignedUsers = this.readAssignedUsers(module.assignedUsers);

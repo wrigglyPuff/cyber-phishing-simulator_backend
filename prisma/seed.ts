@@ -19,10 +19,19 @@ async function main() {
     //Trainers and learners must belong to an organisation, so make one first.
     //upsert = create it if missing, leave it alone if it already exists.
     const org = await prisma.organisation.upsert({
-        where: { name: 'Acme Corp' },
+        where: { name: 'Gone Phishin Corp' },
         update: {},
-        create: { name: 'Acme Corp' },
+        create: { name: 'Gone Phishin Corp' },
     });
+
+    //Global admins belong to their own org, but can reach across all of them
+    const adminOrg = await prisma.organisation.upsert({
+        where: { name: 'Platform Admin' },
+        update: {},
+        create: { name: 'Platform Admin' },
+    });
+
+    console.log(`Organisation ready: ${adminOrg.name} (id ${adminOrg.id})`);
     console.log(`Organisation ready: ${org.name} (id ${org.id})`);
 
     const people = [
@@ -33,7 +42,7 @@ async function main() {
             firstName: 'Ada',
             lastName: 'Admin',
             role: Role.GLOBAL_ADMIN,
-            organisationId: null, //global admins
+            organisationId: adminOrg.id, //global admins
         },
         {
             username: 'trainer',
@@ -60,7 +69,7 @@ async function main() {
         const passwordHash = await bcrypt.hash(password, 10);
         const user = await prisma.user.upsert({
             where: { email: details.email },
-            update: { passwordHash }, //resets the password if you run this again
+            update: { passwordHash, organisationId: details.organisationId }, //resets the password if you run this again
             create: { ...details, passwordHash },
         });
         console.log(`${user.role.padEnd(12)} ${user.email}`);
