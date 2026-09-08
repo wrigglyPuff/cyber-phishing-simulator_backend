@@ -2,7 +2,7 @@ import { IsString, IsNotEmpty, IsOptional, IsArray, ArrayUnique, IsInt, IsPositi
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 
-//Charachters SQL injection requires are rejected
+//Characters SQL injection requires are rejected
 export const SAFE_TEXT_REGEX = /^[A-Za-z0-9 ]+$/;
 
 export class CreateTrainingModuleDto {
@@ -16,16 +16,25 @@ export class CreateTrainingModuleDto {
   title!: string;
 
   @ApiProperty({
-    example: 'This module covers advanced techniques in data analysis.',
+    example: 'This module covers advanced techniques in data analysis',
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(1000)
   @Matches(SAFE_TEXT_REGEX, {
     message:
-      'description may only contain letters, numbers, spaces and . , ( ) - characters',
+      'description may only contain letters, numbers and spaces',
   })
   description!: string;
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'Global admins only. Trainers must skip this field.',
+  })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  organisationId?: number;
 
   @ApiPropertyOptional({ example: [123, 546], type: [Number] })
   @IsOptional()
