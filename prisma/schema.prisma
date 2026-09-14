@@ -78,6 +78,7 @@ model User {
   refreshTokens           RefreshToken[]
   passwordResetTokens     PasswordResetToken[]
   createdModules          Module[]         
+  aiOutputLogs            AiOutputLog[]
   
   @@index([organisationId], map: "User_organisationId_fkey")
 }
@@ -95,6 +96,7 @@ model Module {
   scenarios       Scenario[]
   scenarioAttempts ScenarioAttempt[]
   moduleResults   ModuleResults[]
+  aiOutputLogs    AiOutputLog[]
 
   @@index([organisationId], map: "Module_organisationId_fkey")
 }
@@ -115,6 +117,7 @@ model Scenario {
   createdAt                DateTime             @default(now())
   module                   Module               @relation(fields: [moduleId], references: [id])
   scenarioAttempts         ScenarioAttempt[]
+  aiOutputLogs             AiOutputLog[]
   correctAnswer            Json?
   correctCues              Json
 
@@ -194,4 +197,19 @@ model RefreshToken {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "RefreshToken_userId_fkey")
+}
+
+model AiOutputLog {
+  id             Int       @id @default(autoincrement())
+  generatedById  Int
+  moduleId       Int?
+  scenarioId     Int?
+  prompt         String    @db.VarChar(1000)
+  output         String    @db.Text
+  isSafe         Boolean   @default(true)
+  flaggedReason  String?   @db.VarChar(1000)
+  createdAt      DateTime  @default(now())
+  generatedBy    User      @relation(fields: [generatedById], references: [id])
+  module         Module?   @relation(fields: [moduleId], references: [id])
+  scenario       Scenario? @relation(fields: [scenarioId], references: [id])
 }
