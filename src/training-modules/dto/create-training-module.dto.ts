@@ -11,7 +11,7 @@ export class CreateTrainingModuleDto {
   @IsNotEmpty()
   @MaxLength(250)
   @Matches(SAFE_TEXT_REGEX, {
-    message: 'Charachters allowed are letters and numbers only',
+    message: 'Characters allowed are letters and numbers only',
   })
   title!: string;
 
