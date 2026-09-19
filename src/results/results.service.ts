@@ -6,10 +6,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Status } from '@prisma/client';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Injectable()
 export class ResultsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private analytics: AnalyticsService,) { }
 
   //Completed module, results row stored
   async finalizeAttempt(attemptId: number, userId: number) {
@@ -38,7 +39,7 @@ export class ResultsService {
     const scenariosTotal = attempt.scenarioAttempts.length;
     const percentageScore = Math.round((totalScore / scenariosTotal) * 100);
 
-    return this.prisma.moduleResults.update({
+    const finalised = await this.prisma.moduleResults.update({
       where: { id: attemptId },
       data: {
         total_score: totalScore,
@@ -51,6 +52,13 @@ export class ResultsService {
         completedAt: new Date(),
       },
     });
+
+    await this.analytics.refreshForUserModule(
+      finalised.userId,
+      finalised.moduleId,
+    );
+
+    return finalised;
   }
 
   //Learner's own summary, trainer can lookup specific learners
@@ -135,9 +143,9 @@ export class ResultsService {
       completions === 0
         ? 0
         : Math.round(
-            results.reduce((sum, r) => sum + r.percentage_score, 0) /
-              completions,
-          );
+          results.reduce((sum, r) => sum + r.percentage_score, 0) /
+          completions,
+        );
 
     return {
       moduleId,

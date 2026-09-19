@@ -6,11 +6,206 @@ datasource db {
   provider = "mysql"
 }
 
+model Organisation {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  modules   Module[]
+  users     User[]
+}
+
+model User {
+  id                  Int                  @id @default(autoincrement())
+  username            String               @unique
+  email               String               @unique
+  passwordHash        String
+  role                Role                 @default(LEARNER)
+  organisationId      Int?
+  firstName           String
+  lastName            String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  aiOutputLogs        AiOutputLog[]
+  analytics           Analytics[]
+  createdModules      Module[]
+  moduleResults       ModuleResults[]
+  passwordResetTokens PasswordResetToken[]
+  refreshTokens       RefreshToken[]
+  organisation        Organisation?        @relation(fields: [organisationId], references: [id])
+
+  @@index([organisationId], map: "User_organisationId_fkey")
+}
+
+model Module {
+  id               Int               @id @default(autoincrement())
+  title            String
+  description      String
+  createdAt        DateTime          @default(now())
+  organisationId   Int
+  assignedUsers    Json?
+  createdById      Int?
+  aiOutputLogs     AiOutputLog[]
+  analytics        Analytics[]
+  createdBy        User?             @relation(fields: [createdById], references: [id])
+  organisation     Organisation      @relation(fields: [organisationId], references: [id])
+  moduleResults    ModuleResults[]
+  scenarios        Scenario[]
+  scenarioAttempts ScenarioAttempt[]
+
+  @@index([organisationId], map: "Module_organisationId_fkey")
+  @@index([createdById], map: "Module_createdById_fkey")
+}
+
+model Scenario {
+  id                       Int                     @id @default(autoincrement())
+  moduleId                 Int
+  title                    String
+  content                  String                  @db.VarChar(1000)
+  category                 ScenarioCategory
+  difficulty               ScenarioDifficulty
+  interactionType          ScenarioInteractionType
+  scenarioDescription      String                  @db.VarChar(1000)
+  sender                   String?                 @db.VarChar(250)
+  recipient                String?                 @db.VarChar(250)
+  subject                  String?                 @db.VarChar(250)
+  correctActionExplanation String?                 @default("Explanations coming soon") @db.VarChar(1000)
+  createdAt                DateTime                @default(now())
+  correctAnswer            Json?
+  correctCues              Json
+  aiOutputLogs             AiOutputLog[]
+  module                   Module                  @relation(fields: [moduleId], references: [id])
+  scenarioAttempts         ScenarioAttempt[]
+
+  @@index([moduleId], map: "Scenario_moduleId_fkey")
+}
+
+model ScenarioAttempt {
+  id                 Int           @id @default(autoincrement())
+  scenarioId         Int
+  isCorrect          Boolean
+  timeTakenSeconds   Int
+  createdAt          DateTime      @default(now())
+  cueSelections      Json?
+  missedCues         Json?
+  moduleId           Int
+  moduleResultId     Int
+  selectedChoice     Int?
+  selectedChoiceText String?
+  attemptNumber      Int
+  completedAt        DateTime
+  response           String
+  score              Int
+  startedAt          DateTime
+  module             Module        @relation(fields: [moduleId], references: [id])
+  moduleResult       ModuleResults @relation(fields: [moduleResultId], references: [id])
+  scenario           Scenario      @relation(fields: [scenarioId], references: [id])
+
+  @@index([moduleResultId], map: "ScenarioAttempt_moduleResultId_fkey")
+  @@index([scenarioId], map: "ScenarioAttempt_scenarioId_fkey")
+  @@index([moduleId], map: "ScenarioAttempt_moduleId_fkey")
+}
+
+model ModuleResults {
+  id                  Int               @id @default(autoincrement())
+  userId              Int
+  moduleId            Int
+  organisationId      Int
+  status              Status
+  total_score         Int
+  max_possible_score  Int
+  percentage_score    Int
+  scenarios_completed Int
+  total_scenarios     Int
+  passed              Boolean
+  feedback            String            @db.VarChar(1000)
+  createdAt           DateTime          @default(now())
+  startedAt           DateTime?
+  completedAt         DateTime?
+  updatedAt           DateTime          @updatedAt
+  moduleAttemptNumber Int               @default(1)
+  module              Module            @relation(fields: [moduleId], references: [id])
+  user                User              @relation(fields: [userId], references: [id])
+  scenarioAttempts    ScenarioAttempt[]
+
+  @@index([userId], map: "ModuleResults_userId_fkey")
+  @@index([moduleId], map: "ModuleResults_moduleId_fkey")
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  userId    Int
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "PasswordresetToken_userId_fkey")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  userId    Int
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "RefreshToken_userId_fkey")
+}
+
+model AiOutputLog {
+  id            Int       @id @default(autoincrement())
+  generatedById Int
+  moduleId      Int?
+  scenarioId    Int?
+  prompt        String    @db.VarChar(1000)
+  output        String    @db.Text
+  isSafe        Boolean   @default(true)
+  flaggedReason String?   @db.VarChar(1000)
+  createdAt     DateTime  @default(now())
+  generatedBy   User      @relation(fields: [generatedById], references: [id])
+  module        Module?   @relation(fields: [moduleId], references: [id])
+  scenario      Scenario? @relation(fields: [scenarioId], references: [id])
+
+  @@index([generatedById], map: "AiOutputLog_generatedById_fkey")
+  @@index([moduleId], map: "AiOutputLog_moduleId_fkey")
+  @@index([scenarioId], map: "AiOutputLog_scenarioId_fkey")
+}
+
+model Analytics {
+  id                  Int       @id @default(autoincrement())
+  userId              Int
+  moduleId            Int
+  organisationId      Int
+  attemptsCount       Int       @default(0)
+  firstAttemptScore   Int?
+  firstCompletedAt    DateTime?
+  latestAttemptScore  Int?
+  latestCompletedAt   DateTime?
+  bestAttemptScore    Int?
+  improvementPoints   Int?
+  status              Status
+  scenarios_completed Int       @default(0)
+  total_scenarios     Int       @default(0)
+  passed              Boolean   @default(false)
+  updatedAt           DateTime  @updatedAt
+  module              Module    @relation(fields: [moduleId], references: [id])
+  user                User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, moduleId])
+  @@index([moduleId], map: "Analytics_moduleId_fkey")
+  @@index([organisationId])
+}
+
 enum Role {
   GLOBAL_ADMIN
   TRAINER
   LEARNER
 }
+
 enum ScenarioCategory {
   PHISHING
   SMISHING
@@ -40,176 +235,4 @@ enum Status {
   NOT_STARTED
   IN_PROGRESS
   COMPLETED
-}
-
-enum CueTag {
-  URGENCY
-  MISMATCHED_DOMAIN
-  UNEXPECTED_ATTACHMENT
-  SUSPICIOUS_LINK
-  AUTHORITY_IMPERSONATION
-  SPELLING_GRAMMAR
-  GENERIC_GREETING
-  OTHER
-}
-
-model Organisation {
-  id            Int         @id @default(autoincrement())
-  name          String      @unique
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  modules       Module[]
-  users         User[]
-}
-
-model User {
-  id                      Int              @id @default(autoincrement())
-  username                String           @unique
-  firstName               String
-  lastName                String
-  email                   String           @unique
-  passwordHash            String
-  role                    Role             @default(LEARNER)
-  organisationId          Int?
-  createdAt               DateTime         @default(now())
-  updatedAt               DateTime         @updatedAt
-  moduleResults           ModuleResults[]
-  organisation            Organisation?    @relation(fields: [organisationId], references: [id])
-  refreshTokens           RefreshToken[]
-  passwordResetTokens     PasswordResetToken[]
-  createdModules          Module[]         
-  aiOutputLogs            AiOutputLog[]
-  
-  @@index([organisationId], map: "User_organisationId_fkey")
-}
-
-model Module {
-  id               Int              @id @default(autoincrement())
-  title            String
-  description      String
-  createdAt        DateTime         @default(now())
-  createdById      Int?
-  organisationId   Int
-  assignedUsers    Json?           //array list of userId's
-  createdBy        User?            @relation(fields: [createdById], references: [id])
-  organisation    Organisation     @relation(fields: [organisationId], references: [id])
-  scenarios       Scenario[]
-  scenarioAttempts ScenarioAttempt[]
-  moduleResults   ModuleResults[]
-  aiOutputLogs    AiOutputLog[]
-
-  @@index([organisationId], map: "Module_organisationId_fkey")
-}
-
-model Scenario {
-  id                       Int                  @id @default(autoincrement())
-  moduleId                 Int
-  title                    String
-  content                  String               @db.VarChar(1000)
-  category                 ScenarioCategory
-  difficulty               ScenarioDifficulty
-  interactionType          ScenarioInteractionType
-  scenarioDescription      String               @db.VarChar(1000)
-  sender                   String?              @db.VarChar(250)
-  recipient                String?              @db.VarChar(250)
-  subject                  String?              @db.VarChar(250)
-  correctActionExplanation String?              @default("Explanations coming soon") @db.VarChar(1000)
-  createdAt                DateTime             @default(now())
-  module                   Module               @relation(fields: [moduleId], references: [id])
-  scenarioAttempts         ScenarioAttempt[]
-  aiOutputLogs             AiOutputLog[]
-  correctAnswer            Json?
-  correctCues              Json
-
-  @@index([moduleId], map: "Scenario_moduleId_fkey")
-}
-
-model ScenarioAttempt {
-  id                  Int             @id @default(autoincrement())
-  moduleResultId      Int
-  scenarioId          Int
-  moduleId            Int
-  isCorrect           Boolean
-  timeTakenSeconds    Int
-  attemptNumber       Int
-  response            String
-  score               Int
-  startedAt           DateTime
-  completedAt         DateTime
-  selectedChoice      Int?
-  selectedChoiceText  String?
-  createdAt           DateTime        @default(now())
-  cueSelections       Json?
-  missedCues          Json?
-  module              Module          @relation(fields:[moduleId], references:[id])
-  moduleResult        ModuleResults   @relation(fields: [moduleResultId], references: [id])
-  scenario         Scenario        @relation(fields: [scenarioId], references: [id])
-
-  @@index([moduleResultId], map: "ScenarioAttempt_moduleResultId_fkey")
-  @@index([scenarioId], map: "ScenarioAttempt_scenarioId_fkey")
-  @@index([moduleId], map: "ScenarioAttempt_moduleId_fkey")
-}
-
-model ModuleResults {
-  id                    Int               @id @default(autoincrement())
-  userId                Int
-  moduleId              Int
-  organisationId        Int
-  status                Status
-  total_score           Int
-  max_possible_score    Int
-  percentage_score      Int
-  scenarios_completed   Int
-  total_scenarios       Int
-  passed                Boolean //has the user scored =>80% for the module
-  feedback              String            @db.VarChar(1000)
-  createdAt             DateTime          @default(now())
-  startedAt             DateTime?
-  completedAt           DateTime?         
-  updatedAt             DateTime          @updatedAt
-  module                Module              @relation(fields: [moduleId], references: [id])
-  user                  User                @relation(fields: [userId], references: [id])
-  scenarioAttempts      ScenarioAttempt[]
-
-  @@index([userId], map: "ModuleResults_userId_fkey")
-  @@index([moduleId], map: "ModuleResults_moduleId_fkey")
-}
-
-model PasswordResetToken {
-  id                    Int         @id @default(autoincrement())
-  tokenHash             String      @unique
-  userId                Int
-  expiresAt             DateTime
-  usedAt                DateTime?
-  createdAt             DateTime    @default(now())
-  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId], map: "PasswordresetToken_userId_fkey")
-}
-
-model RefreshToken {
-  id        Int       @id @default(autoincrement())
-  tokenHash String    @unique
-  userId    Int
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId], map: "RefreshToken_userId_fkey")
-}
-
-model AiOutputLog {
-  id             Int       @id @default(autoincrement())
-  generatedById  Int
-  moduleId       Int?
-  scenarioId     Int?
-  prompt         String    @db.VarChar(1000)
-  output         String    @db.Text
-  isSafe         Boolean   @default(true)
-  flaggedReason  String?   @db.VarChar(1000)
-  createdAt      DateTime  @default(now())
-  generatedBy    User      @relation(fields: [generatedById], references: [id])
-  module         Module?   @relation(fields: [moduleId], references: [id])
-  scenario       Scenario? @relation(fields: [scenarioId], references: [id])
 }

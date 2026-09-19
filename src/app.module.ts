@@ -9,8 +9,9 @@ import { TrainingModulesModule } from './training-modules/training-modules.modul
 import { AttemptsModule } from './attempts/attempts.module';
 import { ResultsModule } from './results/results.module';
 import { OrganisationsModule } from './organisations/organisations.module';
-import { DashboardService } from './dashboard/dashboard.service';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { ReportsModule } from './reports/reports.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -23,6 +24,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ResultsModule,
     OrganisationsModule,
     DashboardModule,
+    ReportsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

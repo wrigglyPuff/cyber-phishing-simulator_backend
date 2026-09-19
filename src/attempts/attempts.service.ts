@@ -8,10 +8,11 @@ import { PrismaService } from '../prisma.service';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { CreateScenarioAttemptDto } from './dto/create-scenario-attempt.dto';
 import { Status, Prisma } from '@prisma/client';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Injectable()
 export class AttemptsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService, private analytics: AnalyticsService,) { }
 
   // Create a new attempt row when a learner starts a module, or hand back
   // the learner's existing IN_PROGRESS attempt for that module if one exists
@@ -34,11 +35,16 @@ export class AttemptsService {
       return existingAttempt;
     }
 
+    const previousAttempts = await this.prisma.moduleResults.count({
+      where: { userId, moduleId: dto.moduleId },
+    });
+
     return this.prisma.moduleResults.create({
       data: {
         userId,
         moduleId: dto.moduleId,
         organisationId: module.organisationId,
+        moduleAttemptNumber: previousAttempts + 1,
         status: Status.IN_PROGRESS,
         total_score: 0,
         max_possible_score: 0,
@@ -169,6 +175,11 @@ export class AttemptsService {
         completedAt: isComplete ? new Date() : moduleResult.completedAt,
       },
     })
+
+    await this.analytics.refreshForUserModule(
+      moduleResult.userId,
+      moduleResult.moduleId,
+    );
   }
 
   //Results Summary for one attempt and all answers submitted for each scenario

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttemptsService } from './attempts.service';
 import { PrismaService } from '../prisma.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 describe('AttemptsService', () => {
   let service: AttemptsService;
@@ -16,6 +17,12 @@ describe('AttemptsService', () => {
             attempt: { create: jest.fn(), findUnique: jest.fn() },
             scenarioChoice: { findUnique: jest.fn() },
             scenarioAttempt: { create: jest.fn() },
+          },
+        },
+        {
+          provide: AnalyticsService,
+          useValue: {
+            refreshForUserModule: jest.fn(),
           },
         },
       ],
