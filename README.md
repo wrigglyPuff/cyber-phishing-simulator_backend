@@ -1,30 +1,42 @@
 # **🎣GonePhishin' Backend**
 
 ## **📖Project Description**
+GonePhishin' is a cyber security training portal that teaches people to recognise phishing and other social engineering attacks. It is made up of three parts: an Angular frontend, this NestJS backend, and a separate AI service. The backend is a RESTful API built with NestJS, Prisma and MySQL, secured with JWT authentication. Deployment is achieved with AWS using Docker and GitHub Actions.
 
-This is the prototype of an AI-powered Cyber Phishing simulator and training portal. Built using a RESTful API, NestJS and JWT. Gone Phishin' backend will manage user authentications, simulation scenarios, training modules and performance tracking.
+Learners work through fictional phishing scenarios inside the portal. For each scenario, they choose what to do and pick out the warning signs. The backend records every attempt and returns their score.
 
-This backend will also enable trainers to see what learners have completed and their scores.
+Trainers create modules and scenarios, assign them to learners in their organisation and track progress through reports and a dashboard. Global admins manage organisations across the whole platform.
+
+The AI service uses Ollama to generate realistic phishing scenarios and to evaluate learner responses with constructive feedback. Because the platform produces realistic phishing content, the API only accepts fictional sender addresses and blocks unsafe text in scenarios, and the database includes a log for reviewing AI output and flagging anything unsafe.
 
 ## **🧩Features**
 
 <ul>
   <li>RESTful API design</li>
-  <li>Role based access control (learner, trainer, global admin)</li>
+  <li>Role based access control (LEARNER,TRAINER, GLOBAL_ADMIN) with organisation scoping. GLOBAL_ADMIN can reach across organisations</li>
   <li>Secure password hashing</li>
-  <li>Training module delivery</li>
-  <li>Quiz and results tracking</li>
-  <li>Error handling and validation</li> 
+  <li>Training modules containing scenarios with category and difficulty</li>
+  <li>Trainers assign modules to individual learners by user ID</li>
+  <li>Per module results with a pass mark of 80%</li>
+  <li>Improvement tracking (first, latest and best scores)</li>
+  <li>Trainer dashboard and reports (completion rate, average score and pass rate by module, per learner breakdown with at risk flags)</li>
+  <li>Error handling and validation</li>
+  <li>Scenario text is checked for SQL injection patterns</li>
+  <li>Request bodies are validated and unknown fields are rejected</li>
+  <li>Swagger API documentation at `/api`</li>
 </ul>
 
 ## **🧑‍💻Tech Stack**
 
 <ul>
   <li><strong>Language:</strong>Typescript</li>
-  <li><strong>Framework:</strong>NestJS</li>
+  <li><strong>Framework:</strong>NestJS 11</li>
   <li><strong>Database:</strong>MySQL</li>
-  <li><strong>ORM:</strong>Prisma</li>
-  <li><strong>Authentication:</strong>JWT + Passport.js</li>
+  <li><strong>ORM:</strong>Prisma 7 with the MariaDB adapter</li>
+  <li><strong>Authentication:</strong>JWT + Passport.js, with bcrypt for password hashing</li>
+  <li><strong>Docs:</strong>Swagger (`@nestjs/swagger`)</li>
+  <li><strong>Testing:</strong>Jest</li>
+  <li><strong>Deployment</strong>Docker</li>
 </ul>
 
 ## **🧰Other Tools**
