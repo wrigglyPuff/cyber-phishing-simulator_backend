@@ -36,7 +36,7 @@ The AI service uses Ollama to generate realistic phishing scenarios and to evalu
   <li><strong>Authentication:</strong>JWT + Passport.js, with bcrypt for password hashing</li>
   <li><strong>Docs:</strong>Swagger (`@nestjs/swagger`)</li>
   <li><strong>Testing:</strong>Jest</li>
-  <li><strong>Deployment</strong>Docker</li>
+  <li><strong>Deployment:</strong>Docker</li>
 </ul>
 
 ## **🧰Other Tools**
