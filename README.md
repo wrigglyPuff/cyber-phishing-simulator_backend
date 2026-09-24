@@ -2,7 +2,7 @@
 
 ## **Project Description**
 
-This is the prototype of an AI-powered Cyber Phishing simulator and training portal. Built using a RESTful API, NestJS and JWT. Gone Phishin' backend will manage user authentications, simulation scenarios, training modules and performance tracking
+This is the prototype of an AI-powered Cyber Phishing simulator and training portal. Built using a RESTful API, NestJS and JWT. Gone Phishin' backend will manage user authentications, simulation scenarios, training modules and performance tracking.
 
 This backend will also enable trainers to see what learners have completed and their scores.
 
@@ -10,7 +10,7 @@ This backend will also enable trainers to see what learners have completed and t
 
 <ul>
   <li>RESTful API design</li>
-  <li>Rose based access control (learner vs trainer)</li>
+  <li>Role based access control (learner, trainer, global admin)</li>
   <li>Secure password hashing</li>
   <li>Training module delivery</li>
   <li>Quiz and results tracking</li>
@@ -36,233 +36,439 @@ This backend will also enable trainers to see what learners have completed and t
 
 ## **Project Structure**
 
-🚧👷‍♀️🚧
+```text
+src/
+  auth/              Login, register, refresh tokens, password reset, JWT guards
+  users/             User accounts
+  organisations/     Organisations (every user belongs to one)
+  training-modules/  Training modules and learner assignment
+  scenarios/         Phishing scenarios inside modules
+  attempts/          Learner attempts at modules and scenarios
+  results/           Scores and progress
+  dashboard/         Trainer dashboard data
+  reports/           Trainer reports and export
+  analytics/         Analytics service
+  common/            Shared validators and the organisation access check
+prisma/              schema.prisma, migrations, seed.ts
+test/                End-to-end tests
+```
 
-<ul>
-</ul>
 
 # **🔌API Endpoints**
+A valid JWT is needed for "any logged-in user". 
+"Trainer/Admin" means the TRAINER or GLOBAL_ADMIN role. 
+Users are also restricted to their own organisation (with the exception of GLOBAL_ADMIN)
 
-## **Authentication**
+---
+## **Authentication** (`/auth`)
 
 <table>
   <tr>
     <th>Method</th>
     <th>Endpoint</th>
     <th>Description</th>
-    <th>Auth Required</th>
+    <th>Access</th>
   </tr>
   <tr>
     <td><strong>POST</strong></td>
     <td>/auth/register</td>
-    <td>Register a new learner or trainer</td>
-    <td>No</td>
+    <td>Register a new learner</td>
+    <td>Public</td>
   </tr>
   <tr>
     <td><strong>POST</strong></td>
     <td>/auth/login</td>
-    <td>Login user and return JWT token</td>
-    <td>No</td>
+    <td>Login user and return JWT (access and refresh token)</td>
+    <td>Public</td>
   </tr>
   <tr>
-    <td><strong>GET</strong></td>
-    <td>/auth/me</td>
-    <td>Get current logged-in user</td>
-    <td>Yes</td>
+    <td><strong>POST</strong></td>
+    <td>/auth/logout</td>
+    <td>Log out (revoke the refresh token)</td>
+    <td>Any logged-in user</td>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/auth/refresh</td>
+    <td>Get a new access token</td>
+    <td>Public (needs refresh token)</td>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/auth/forgot-password</td>
+    <td>Start a password reset</td>
+    <td>Public</td>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/auth/reset-password</td>
+    <td>Finish a password reset</td>
+    <td>Public (needs reset token)</td>
   </tr>
 </table>
 
 ---
 
-## **🧑‍🤝‍🧑Users**
+## **🧑‍🤝‍🧑Users** (`/users`)
 
 <table>
   <tr>
     <th>Method</th>
     <th>Endpoint</th>
     <th>Description</th>
-    <th>Auth Required</th>
+    <th>Access</th>
   </tr>
   <tr>
     <td><strong>GET</strong></td>
+    <td>/users/me</td>
+    <td>Get my own profile</td>
+    <td>Any logged-in user</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/users/learners</td>
+    <td>List learners</td>
+    <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/users/trainers</td>
+    <td>List trainers</td>
+    <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
     <td>/users</td>
-    <td>Get all users (trainer view)</td>
-    <td>Yes (Trainer)</td>
+    <td>Create a user</td>
+    <td>Trainer/Admin</td>
   </tr>
   <tr>
     <td><strong>GET</strong></td>
     <td>/users/:id</td>
-    <td>Get user profile and results</td>
-    <td>Yes</td>
+    <td>Get a user</td>
+    <td>Any logged-in user</td>
   </tr>
   <tr>
     <td><strong>PATCH</strong></td>
     <td>/users/:id</td>
     <td>Update user details</td>
-    <td>Yes</td>
+    <td>Any logged-in user</td>
   </tr>
   <tr>
     <td><strong>DELETE</strong></td>
     <td>/users/:id</td>
     <td>Delete user</td>
-    <td>Yes (Trainer)</td>
+    <td>Trainer/Admin</td>
   </tr>
 </table>
 
 ---
 
-## **🎞️Scenarios**
+
+## **Organisations** (`/organisations`)
+<table>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Access</th>
+</tr>
+<tr>
+<td><strong>POST</strong></td>
+<td>/organisations</td>
+    <td>Create an organisation</td>
+    <td>Global admin</td>
+  </tr>
+  <tr>
+<td><strong>GET</strong></td>
+<td>/organisations/:id</td>
+    <td>Get an organisation</td>
+    <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+<td><strong>PATCH</strong></td>
+<td>/organisations/:id</td>
+    <td>Update an organisation</td>
+    <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+<td><strong>DELETE</strong></td>
+<td>/organisations/:id</td>
+    <td>Delete an organisation</td>
+    <td>Global admin</td>
+  </tr>
+</table>
+
+---
+## **Training Modules** (`/training-modules`)
+<table>
+<tr>
+<th>Method</th> 
+<th>Endpoint</th> 
+<th>Description</th> 
+<th>Access</th> 
+</tr>
+<tr>
+<td><strong>POST</strong></td>  
+<td>/training-modules</td>  
+<td>Create a module</td> 
+<td>Trainer/Admin</td>
+</tr>
+<tr>
+<td><strong>GET</strong></td>  
+<td>/training-modules</td>  
+<td>List modules</td> 
+<td>Any logged-in user</td>
+</tr>
+<tr>
+<td><strong>GET</strong></td>  
+<td>/training-modules/:id</td> 
+<td>Get a module</td>
+<td>Any logged-in user</td>
+</tr>
+<tr>
+<td><strong>PATCH</strong></td>
+<td>/training-modules/:id</td> 
+<td>Update a module</td> 
+<td>Trainer/Admin</td>
+</tr>
+<tr>
+<td><strong>DELETE</strong></td>
+<td>/training-modules/:id</td> 
+<td>Delete a module</td> 
+<td>Trainer/Admin</td>
+</tr>
+<tr>
+<td><strong>POST</strong></td>  
+<td>/training-modules/:moduleId/assignments</td> 
+<td>Assign a learner to a module</td>
+<td>Trainer/Admin</td>
+</tr>
+<tr>
+<td><strong>DELETE</strong></td>  
+<td>/training-modules/:moduleId/assignments/:userId</td>
+<td>Remove a learner from a module</td>
+<td>Trainer/Admin</td>
+</tr>
+</table>
+
+---
+
+
+## **🎞️Scenarios** (`/scenarios`)
 
 <table>
   <tr>
     <th>Method</th>
     <th>Endpoint</th>
     <th>Description</th>
-    <th>Auth Required</th>
+    <th>Access</th>
   </tr>
-  <tr>
+    <tr>
+    <td><strong>POST</strong></td>
+    <td>/scenarios</td>
+    <td>Create a new scenario</td>
+    <td>Trainer/Admin</td>
+  </tr>
+      <tr>
     <td><strong>GET</strong></td>
     <td>/scenarios</td>
-    <td>Get assigned training scenarios</td>
-    <td>Yes</td>
+    <td>List scenarios</td>
+    <td>Any logged-in user</td>
   </tr>
   <tr>
     <td><strong>GET</strong></td>
     <td>/scenarios/:id</td>
-    <td>Get scenario details</td>
-    <td>Yes</td>
-  </tr>
-  <tr>
-    <td><strong>POST</strong></td>
-    <td>/scenarios</td>
-    <td>Create a new scenario</td>
-    <td>Yes (Trainer)</td>
+    <td>Get a scenario</td>
+    <td>Any logged-in user</td>
   </tr>
   <tr>
     <td><strong>PATCH</strong></td>
     <td>/scenarios/:id</td>
     <td>Update a scenario</td>
-    <td>Yes (Trainer)</td>
+    <td>Trainer/Admin</td>
   </tr>
   <tr>
     <td><strong>DELETE</strong></td>
     <td>/scenarios/:id</td>
     <td>Delete a scenario</td>
-    <td>Yes (Trainer)</td>
+    <td>Trainer/Admin</td>
   </tr>
 </table>
 
 ---
 
-## **Attempts (Learner Actions)**
+
+## **Attempts (`/attempts`)**
 
 <table>
   <tr>
     <th>Method</th>
     <th>Endpoint</th>
     <th>Description</th>
-    <th>Auth Required</th>
+    <th>Access</th>
   </tr>
   <tr>
     <td><strong>POST</strong></td>
     <td>/attempts</td>
-    <td>Submit learner decision for a scenario</td>
-    <td>Yes</td>
+    <td>Start a module attempt</td>
+    <td>Any logged-in user</td>
+  </tr>
+  <tr>
+    <td><strong>POST</strong></td>
+    <td>/attempts/:id/scenario-attempts</td>
+    <td>Submit an answer for a scenario</td>
+    <td>Any logged-in user</td>
   </tr>
   <tr>
     <td><strong>GET</strong></td>
-    <td>/attempts/user/:id</td>
-    <td>Get all attempts for a user</td>
-    <td>Yes</td>
+    <td>/attempts</td>
+    <td>List attempts</td>
+    <td>Any logged-in user</td>
   </tr>
   <tr>
     <td><strong>GET</strong></td>
     <td>/attempts/:id</td>
-    <td>Get specific attempt details</td>
-    <td>Yes</td>
+    <td>Get one attempt</td>
+    <td>Any logged-in user</td>
   </tr>
 </table>
 
 ---
 
-## **Feedback**
+## **Results** (`/results`)
 
 <table>
   <tr>
     <th>Method</th>
     <th>Endpoint</th>
     <th>Description</th>
-    <th>Auth Required</th>
+    <th>Access</th>
+  </tr>
+  <tr>
+  <td><strong>POST</strong></td>
+  <td>/results/attempts/:attemptId/finalise</td>
+  <td>Finish an attempt and calculate the score</td>
+  <td>Any logged-in user</td>
   </tr>
   <tr>
     <td><strong>GET</strong></td>
-    <td>/feedback/:attemptId</td>
-    <td>Get feedback for a specific attempt</td>
-    <td>Yes</td>
+    <td>/results/me</td>
+    <td>My results</td>
+    <td>Any logged-in user</td>
   </tr>
   <tr>
-    <td><strong>POST</strong></td>
-    <td>/feedback</td>
-    <td>Create feedback (manual or AI-generated)</td>
-    <td>Yes</td>
+    <td><strong>GET</strong></td>
+    <td>/results/user/:userId</td>
+    <td>Results for one learner</td>
+    <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+    <td><strong>GET</strong></td>
+    <td>/results/module/:moduleId</td>
+    <td>Results for one module</td>
+    <td>Trainer/Admin</td>
   </tr>
 </table>
 
 ---
 
-## **Results / Progress Tracking**
+
+## **Trainer Dashboard** (`/organisations/:orgId/trainer-dashboard`)
 
 <table>
   <tr>
     <th>Method</th>
     <th>Endpoint</th>
     <th>Description</th>
-    <th>Auth Required</th>
+    <th>Access</th>
   </tr>
   <tr>
     <td><strong>GET</strong></td>
-    <td>/results/user/:id</td>
-    <td>Get summary of user performance</td>
-    <td>Yes</td>
+    <td>/organisations/:orgId/trainer-dashboard</td>
+    <td>Dashboard overview</td>
+    <td>Trainer/Admin</td>
   </tr>
   <tr>
     <td><strong>GET</strong></td>
-    <td>/results</td>
-    <td>Get all results (trainer dashboard)</td>
-    <td>Yes (Trainer)</td>
+    <td>/organisations/:orgId/trainer-dashboard/activity</td>
+    <td>Recent activity</td>
+    <td>Trainer/Admin</td>
   </tr>
 </table>
+
+---
+
+## **Reports** (`/organisations/:orgId/reports`)
+<table>
+  <tr>
+    <th>Method</th>
+    <th>Endpoint</th>
+    <th>Description</th>
+    <th>Access</th>
+  </tr>
+  <tr>
+  <td><strong>GET</strong></td>
+  <td>/organisations/:orgId/reports/overview</td>
+  <td>Organisation overview</td>
+  <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+  <td><strong>GET</strong></td>
+  <td>/organisations/:orgId/reports/modules</td>
+  <td>Breakdown by module</td>
+  <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+  <td><strong>GET</strong></td>
+  <td>/organisations/:orgId/reports/modules/:moduleId</td>
+  <td>Detail for one module</td>
+  <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+  <td><strong>GET</strong></td>
+  <td>/organisations/:orgId/reports/users </td>
+  <td>Breakdown by user </td>
+  <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+  <td><strong>GET</strong></td>
+  <td>/organisations/:orgId/reports/users/:userId</td>
+  <td>Detail for one user</td>
+  <td>Trainer/Admin</td>
+  </tr>
+  <tr>
+  <td><strong>GET</strong></td> 
+  <td>/organisations/:orgId/reports/export</td>
+  <td>Export report data</td>
+  <td>Trainer/Admin</td>
+  </tr>
+  </table>
+
+  ---
+
+  ## **Health check**
+  <table>
+  <tr>
+  <th>Method</th> 
+  <th>Endpoint</th> 
+  <th>Description</th> 
+  <th>Access</th>
+  </tr>
+  <tr>
+  <td><strong>GET</strong></td> 
+  <td>/</td> 
+  <td>Check the API is running</td>
+  <td>Public</td> 
+  </tr>
+  </table>
+
 
 # **🔏Contributing**
 
 This project is a part of a university software development project. As of 2026, only group members may contribute and make improvements.
 
 ## **Installation**
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-# Project Setup
 
 ## Prerequisites
 
@@ -287,42 +493,20 @@ You will need the following details:
 - Database Name
 
 ---
-
-## Update Prisma Adapter Configuration
-
-#### `prisma.service.ts`
-
-Update the adapter configuration to match your local MySQL setup.
-
-Example values to update:
-
-```ts
-host: '127.0.0.1',
-port: 3306,
-user: 'yourUser',
-password: 'yourPassword',
-database: 'yourDatabase'
-```
-
-#### `test-prisma.ts`
-
-Update the same MySQL connection settings in this file as well:
-
-```ts
-host: '127.0.0.1',
-port: 3306,
-user: 'yourUser',
-password: 'yourPassword',
-database: 'yourDatabase'
-Environment Variables
-```
+## Environment Variables
 
 Confirm your .env file in the project root contains the following values:
 
-```ts
-DATABASE_URL = 'mysql://user:password@127.0.0.1:3306/databaseName';
-JWT_SECRET = 'yourSecret';
+```bash
+DATABASE_URL="mysql://yourUser:yourPassword@127.0.0.1:3306/yourDatabaseName"
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=yourUser        
+DB_PASSWORD=yourPassword
+DB_NAME=yourDatabaseName
+JWT_SECRET="yourSecret"
 ```
+Optional settings (default is in brackets): `ACCESS_TOKEN_TTL` [12h], `REFRESH_TOKEN_TTL_DAYS` [7], `RESET_TOKEN_TTL_MINUTES` [30].
 
 ### Install Dependencies
 
@@ -338,12 +522,17 @@ Generate Prisma Client
 npx prisma generate
 ```
 
-Pull Database Schema
+Create the database tables
 
 ```ts
-npx prisma db pull
+npx prisma migrate deploy
 ```
 
+Add test data
+
+```ts
+npm run seed
+```
 ### Start the Application
 
 Run the NestJS application in development mode:
@@ -351,6 +540,9 @@ Run the NestJS application in development mode:
 ```ts
 npm run start:dev
 ```
+Start the API on http://localhost:3000
+
+Swagger API docs are at http://localhost:3000/api
 
 ## Run tests
 
@@ -364,60 +556,31 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+## Test Logins (development only, generated by the seed)
 
-## Install Prisma
-
-<mark> NB: schema provided </mark>
-
-```bash
-#install dependencies
-npm install @prisma/client      //runtime library for Prisma
-npm install prisma --save-dev  //CLI for generating client, migrations, and database introspection
-```
-
-<mark>Create your own .env file in the root folder OR add the following: </mark><br>
-
-```bash
-DATABASE_URL="mysql://username:password@localhost:3306/db_name"
-```
-
-## Generate a prisma client
-
-```bash
-npx prisma generate
-```
-
-## Update local database
-
-```bash
-npx prisma migrate dev
-```
-
-🚧👷🚧 BELOW
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+<table>
+  <tr>
+  <th>Role</th> 
+  <th>Email</th> 
+  <th>Password</th> 
+  </tr>
+  <tr>
+  <td>Global admin</td> 
+  <td>admin@test.com</td>
+  <td>Password1!</td>
+  </tr>
+  <tr> 
+  <td>Trainer</td>
+  <td>trainer@test.com</td>
+  <td>Password1!</td> 
+  </tr>
+  <tr>
+  <td>Learner</td>
+  <td>learner@test.com</td>
+  <td>newPassword1!</td>
+  </tr>
+  </table>
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED. This is a university group project and only group members can contribute.

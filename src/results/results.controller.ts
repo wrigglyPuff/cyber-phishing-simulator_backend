@@ -31,10 +31,10 @@ import { ModuleResultsSummaryDto } from './dto/module-results-summary.dto';
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) { }
 
-  @Post('attempts/:attemptId/finalize')
-  @ApiOperation({ summary: 'Finalize an attempt and store the result' })
-  finalize(@Request() req, @Param('attemptId') attemptId: string) {
-    return this.resultsService.finalizeAttempt(+attemptId, req.user.userId);
+  @Post('attempts/:attemptId/finalise')
+  @ApiOperation({ summary: 'Finalise an attempt and store the result' })
+  finalise(@Request() req, @Param('attemptId') attemptId: string) {
+    return this.resultsService.finaliseAttempt(+attemptId, req.user.userId);
   }
 
   @Get('me')

@@ -13,7 +13,7 @@ export class ResultsService {
   constructor(private prisma: PrismaService, private analytics: AnalyticsService,) { }
 
   //Completed module, results row stored
-  async finalizeAttempt(attemptId: number, userId: number) {
+  async finaliseAttempt(attemptId: number, userId: number) {
     const attempt = await this.prisma.moduleResults.findUnique({
       where: { id: attemptId },
       include: { scenarioAttempts: true },
