@@ -34,6 +34,14 @@ export class OrganisationsController {
         return this.organisationsService.create(createOrganisationDto);
     }
 
+    @Get()
+    @UseGuards(RolesGuard)
+    @Roles(Role.GLOBAL_ADMIN)
+    @ApiOperation({ summary: 'List every organisation with member and module counts (global admin only)' })
+    findAll() {
+        return this.organisationsService.findAll();
+    }
+
     @Get(':id')
     @UseGuards(RolesGuard)
     @Roles(Role.TRAINER, Role.GLOBAL_ADMIN)

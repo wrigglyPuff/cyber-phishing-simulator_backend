@@ -8,10 +8,11 @@ import { PrismaService } from '../prisma.service';
 export class ScenariosService {
   constructor(private prisma: PrismaService) { }
 
-  //Checks modules belong to an Organisation
+  //Checks modules belong to an Organisation. organisationId is null for a
+  //global admin, who may use a module from any organisation.
   private async ensureModuleInOrganisation(
     moduleId: number,
-    organisationId: number,
+    organisationId: number | null,
   ) {
     const module = await this.prisma.module.findUnique({
       where: { id: moduleId },
@@ -19,7 +20,7 @@ export class ScenariosService {
     if (!module) {
       throw new NotFoundException(`Module ${moduleId} not found`);
     }
-    if (module.organisationId !== organisationId) {
+    if (organisationId !== null && module.organisationId !== organisationId) {
       throw new ForbiddenException(
         'You do not have permission to access this module',
       );
@@ -46,7 +47,7 @@ export class ScenariosService {
     };
   }
 
-  async create(createScenarioDto: CreateScenarioDto, organisationId: number) {
+  async create(createScenarioDto: CreateScenarioDto, organisationId: number | null) {
     const { correctAnswer, correctCues, ...scenarioData } = createScenarioDto;
 
     const hasAnswer = correctAnswer !== undefined && correctAnswer !== null;
@@ -75,15 +76,22 @@ export class ScenariosService {
     });
   }
 
+  //organisationId is null for a global admin with no organisation filter,
+  //which lists scenarios across every organisation
   async findAll(
-    organisationId: number,
+    organisationId: number | null,
     requestingUserId: number,
     requestingUserRole: string,
     moduleId?: number,
   ) {
     const isLearner = requestingUserRole === Role.LEARNER;
 
+    //Learners only ever get the answer-free view of their assigned
+    //scenarios - never the full records below, even without an organisation
     if (isLearner) {
+      if (organisationId === null) {
+        return [];
+      }
       const assignedModuleIds = await this.getAssignedModuleIds(
         requestingUserId,
         organisationId,
@@ -105,7 +113,7 @@ export class ScenariosService {
 
     return this.prisma.scenario.findMany({
       where: {
-        module: { organisationId },
+        ...(organisationId !== null ? { module: { organisationId } } : {}),
         ...(moduleId !== undefined ? { moduleId } : {}),
       },
     });
@@ -129,7 +137,7 @@ export class ScenariosService {
 
   async findOne(
     id: number,
-    organisationId: number,
+    organisationId: number | null,
     requestingUserId: number,
     requestingUserRole: string,
   ) {
@@ -142,7 +150,7 @@ export class ScenariosService {
       throw new NotFoundException(`Scenario ${id} not found`);
     }
 
-    if (scenario.module.organisationId !== organisationId) {
+    if (organisationId !== null && scenario.module.organisationId !== organisationId) {
       throw new ForbiddenException(
         'You do not have permission to access this scenario',
       );
@@ -160,7 +168,7 @@ export class ScenariosService {
 
     const assignedModuleIds = await this.getAssignedModuleIds(
       requestingUserId,
-      organisationId,
+      scenario.module.organisationId,
     );
     if (!assignedModuleIds.includes(scenarioFields.moduleId)) {
       throw new ForbiddenException(
@@ -174,7 +182,7 @@ export class ScenariosService {
   async update(
     id: number,
     updateScenarioDto: UpdateScenarioDto,
-    organisationId: number,
+    organisationId: number | null,
   ) {
     const existing = await this.prisma.scenario.findUnique({
       where: { id },
@@ -184,7 +192,7 @@ export class ScenariosService {
     if (!existing) {
       throw new NotFoundException(`Scenario ${id} not found`);
     }
-    if (existing.module.organisationId !== organisationId) {
+    if (organisationId !== null && existing.module.organisationId !== organisationId) {
       throw new ForbiddenException(
         'You do not have permission to update this scenario',
       );
@@ -224,7 +232,7 @@ export class ScenariosService {
       data,
     });
   }
-  async remove(id: number, organisationId: number) {
+  async remove(id: number, organisationId: number | null) {
     const existing = await this.prisma.scenario.findUnique({
       where: { id },
       include: { module: true }
@@ -234,7 +242,7 @@ export class ScenariosService {
       throw new NotFoundException(`Scenario ${id} not found`);
     }
 
-    if (existing.module.organisationId !== organisationId) {
+    if (organisationId !== null && existing.module.organisationId !== organisationId) {
       throw new ForbiddenException('You do not have permission to delete this scenario',
       );
     }
