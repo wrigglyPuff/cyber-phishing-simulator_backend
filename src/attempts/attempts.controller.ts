@@ -14,6 +14,7 @@ import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { CreateScenarioAttemptDto } from './dto/create-scenario-attempt.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard';
 import { FindAttemptsDto } from './find-attempts.dto';
+import { Role } from '@prisma/client';
 
 @ApiTags('Attempts')
 @ApiBearerAuth()
@@ -66,12 +67,12 @@ export class AttemptsController {
       'View one attempt and its results (own attempts, or any attempt if trainer from the same organisation)',
   })
   findOne(@Request() req, @Param('id') id: string) {
-    const isTrainer = req.user.role === 'trainer';
+    const isTrainer = req.user.role === Role.TRAINER || req.user.role === Role.GLOBAL_ADMIN;
     return this.attemptsService.findOne(
       +id,
       req.user.userId,
       isTrainer,
-      req.user.organisation,
+      req.user.organisationId,
     );
   }
 }
