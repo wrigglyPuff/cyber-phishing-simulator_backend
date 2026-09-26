@@ -188,6 +188,7 @@ export class AttemptsService {
     userId: number,
     isTrainer: boolean,
     organisationId: number,
+    requestingRole: string,
   ) {
     const attempt = await this.prisma.moduleResults.findUnique({
       where: { id: attemptId },
@@ -210,9 +211,9 @@ export class AttemptsService {
         `You do not have permission to view this attempt`,
       );
     }
-    if (isTrainer && attempt.organisationId !== organisationId) {
+    if (isTrainer && requestingRole !== 'GLOBAL_ADMIN' && attempt.organisationId !== organisationId) {
       throw new ForbiddenException(
-        'You are not authorised, this ateempt belongs to another organisation',
+        'You are not authorised, this attempt belongs to another organisation',
       );
     }
     return attempt;

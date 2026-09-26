@@ -24,7 +24,7 @@ export class ResultsService {
     }
 
     if (attempt.userId !== userId) {
-      throw new ForbiddenException('You do not have access tothis attempt');
+      throw new ForbiddenException('You do not have access to this attempt');
     }
 
     if (attempt.scenarioAttempts.length === 0) {
@@ -101,6 +101,7 @@ export class ResultsService {
   async getLearnerSummary(
     learnerId: number,
     requestingOrgId: number,
+    requestingRole: string,
     moduleId?: number,
   ) {
     const learner = await this.prisma.user.findUnique({
@@ -111,7 +112,7 @@ export class ResultsService {
       throw new NotFoundException('Learner not found');
     }
 
-    if (learner.organisationId !== requestingOrgId) {
+    if (requestingRole !== 'GLOBAL_ADMIN' && learner.organisationId !== requestingOrgId) {
       throw new ForbiddenException('That learner is not in your organisation');
     }
     return this.buildSummary(learnerId, moduleId);
@@ -120,7 +121,7 @@ export class ResultsService {
   //Trainer view of all learner's results for a module.
   //Restricted to own organisation only,
   //siple aggregare stats (total attempts, average score etc)
-  async getModuleResults(moduleId: number, organisationId: number) {
+  async getModuleResults(moduleId: number, organisationId: number, requestingRole: string) {
     const module = await this.prisma.module.findUnique({
       where: { id: moduleId },
     });
@@ -132,7 +133,7 @@ export class ResultsService {
     const results = await this.prisma.moduleResults.findMany({
       where: {
         moduleId,
-        organisationId,
+        ...(requestingRole === 'GLOBAL_ADMIN' ? {} : { organisationId }),
       },
       include: { user: { select: { id: true, username: true, email: true } } },
       orderBy: { createdAt: 'desc' },
