@@ -44,6 +44,44 @@ export class OrganisationsService {
         };
     }
 
+    //Every organisation with live member/module counts (global admin only)
+    async findAll() {
+        const organisations = await this.prisma.organisation.findMany({
+            orderBy: { name: 'asc' },
+        });
+
+        const [userCounts, moduleCounts] = await Promise.all([
+            this.prisma.user.groupBy({
+                by: ['organisationId', 'role'],
+                where: { role: { in: [Role.LEARNER, Role.TRAINER] } },
+                _count: { _all: true },
+            }),
+            this.prisma.module.groupBy({
+                by: ['organisationId'],
+                _count: { _all: true },
+            }),
+        ]);
+
+        return organisations.map((organisation) => {
+            const countFor = (role: Role) =>
+                userCounts.find(
+                    (row) => row.organisationId === organisation.id && row.role === role,
+                )?._count._all ?? 0;
+
+            return {
+                id: organisation.id,
+                name: organisation.name,
+                learnerCount: countFor(Role.LEARNER),
+                trainerCount: countFor(Role.TRAINER),
+                moduleCount:
+                    moduleCounts.find((row) => row.organisationId === organisation.id)
+                        ?._count._all ?? 0,
+                createdAt: organisation.createdAt,
+                updatedAt: organisation.updatedAt,
+            };
+        });
+    }
+
     async findOne(
         id: number,
         requester: { role: string; organisationId: number | null },

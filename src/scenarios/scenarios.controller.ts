@@ -10,6 +10,7 @@ import {
   Query,
   ParseIntPipe,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,6 +33,20 @@ import { Role } from '@prisma/client';
 export class ScenariosController {
   constructor(private readonly scenariosService: ScenariosService) { }
 
+  //A global admin works across every organisation, so their own
+  //organisationId never restricts which scenarios they can reach. null
+  //means "every organisation" to the service, so anyone else without an
+  //organisation is refused rather than treated like an admin.
+  private scopeFor(user: { role: string; organisationId: number | null }) {
+    if (user.role === Role.GLOBAL_ADMIN) {
+      return null;
+    }
+    if (user.organisationId == null) {
+      throw new ForbiddenException('Your account is not linked to an organisation');
+    }
+    return user.organisationId;
+  }
+
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can create scenarios
@@ -39,7 +54,7 @@ export class ScenariosController {
   create(@Request() req, @Body() createScenarioDto: CreateScenarioDto) {
     return this.scenariosService.create(
       createScenarioDto,
-      req.user.organisationId,
+      this.scopeFor(req.user),
     );
   }
 
@@ -48,12 +63,24 @@ export class ScenariosController {
     summary: 'List all scenarios, optionally filtered by module',
   })
   @ApiQuery({ name: 'moduleId', required: false, type: Number })
+  @ApiQuery({
+    name: 'organisationId',
+    required: false,
+    type: Number,
+    description: 'Global admin only: limit the list to one organisation',
+  })
   findAll(
     @Request() req,
     @Query('moduleId', new ParseIntPipe({ optional: true })) moduleId?: number,
+    @Query('organisationId', new ParseIntPipe({ optional: true }))
+    organisationId?: number,
   ) {
+    const scope =
+      req.user.role === Role.GLOBAL_ADMIN
+        ? (organisationId ?? null)
+        : this.scopeFor(req.user);
     return this.scenariosService.findAll(
-      req.user.organisationId,
+      scope,
       req.user.userId,
       req.user.role,
       moduleId,
@@ -65,7 +92,7 @@ export class ScenariosController {
   findOne(@Request() req, @Param('id', ParseIntPipe) id: number) {
     return this.scenariosService.findOne(
       id,
-      req.user.organisationId,
+      this.scopeFor(req.user),
       req.user.userId,
       req.user.role
     );
@@ -83,7 +110,7 @@ export class ScenariosController {
     return this.scenariosService.update(
       id,
       updateScenarioDto,
-      req.user.organisationId,
+      this.scopeFor(req.user),
     );
   }
 
@@ -92,6 +119,6 @@ export class ScenariosController {
   @Roles(Role.TRAINER, Role.GLOBAL_ADMIN) //only trainers can delete scenarios
   @ApiOperation({ summary: 'Delete a scenario (trainer & admin only)' })
   remove(@Request() req, @Param('id', ParseIntPipe) id: number) {
-    return this.scenariosService.remove(id, req.user.organisationId);
+    return this.scenariosService.remove(id, this.scopeFor(req.user));
   }
 }
