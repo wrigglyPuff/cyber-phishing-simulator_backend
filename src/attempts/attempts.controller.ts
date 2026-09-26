@@ -73,6 +73,7 @@ export class AttemptsController {
       req.user.userId,
       isTrainer,
       req.user.organisationId,
+      req.user.role,
     );
   }
 }

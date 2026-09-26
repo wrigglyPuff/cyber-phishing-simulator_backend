@@ -67,6 +67,7 @@ export class ResultsController {
     return this.resultsService.getLearnerSummary(
       +userId,
       req.user.organisationId,
+      req.user.role,
       moduleId ? +moduleId : undefined,
     );
   }
@@ -83,6 +84,7 @@ export class ResultsController {
     return this.resultsService.getModuleResults(
       +moduleId,
       req.user.organisationId,
+      req.user.role,
     );
   }
 }
